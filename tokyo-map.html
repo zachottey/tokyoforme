@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tokyo Explorer — Meguro Base Camp</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      overflow: hidden;
+    }
+
+    /* ── App shell ──────────────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ── Top bar ────────────────────────────────────────────────── */
+    #topbar {
+      flex-shrink: 0;
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e4;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 10px;
+      z-index: 900;
+      box-shadow: 0 1px 0 #e8e8e4, 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .topbar-logo {
+      font-size: 20px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .topbar-text { flex: 1; min-width: 0; }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #111;
+      line-height: 1.2;
+    }
+    .topbar-sub {
+      font-size: 11px;
+      color: #999;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+    }
+
+    #legend-btn {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1.5px solid #e0e0da;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #legend-btn:hover { background: #f5f5f0; }
+    #legend-btn:active { transform: scale(0.93); }
+
+    /* ── Filter chips ───────────────────────────────────────────── */
+    #filter-bar {
+      flex-shrink: 0;
+      height: 50px;
+      background: #fff;
+      border-bottom: 1px solid #ebebeb;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 7px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    #filter-bar::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 16px;
+      border: 1.5px solid #e2e2de;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all 0.14s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      letter-spacing: -0.1px;
+    }
+    .chip:hover { border-color: #ccc; }
+    .chip:active { transform: scale(0.96); }
+
+    .chip.active { border-color: transparent !important; color: #fff; }
+    .chip[data-f="all"].active    { background: #1a1a1a; }
+    .chip[data-f="food"].active   { background: #E8583B; }
+    .chip[data-f="nightlife"].active { background: #7B4FBF; }
+    .chip[data-f="music"].active  { background: #1A6FBF; }
+    .chip[data-f="activity"].active { background: #0D9E7E; }
+    .chip[data-f="culture"].active { background: #C6590E; }
+
+    /* ── Main area ──────────────────────────────────────────────── */
+    #main-area {
+      flex: 1 1 0;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── Map ────────────────────────────────────────────────────── */
+    #map-wrap { flex: 1 1 0; position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+
+    /* ── Sidebar (desktop only) ─────────────────────────────────── */
+    #sidebar {
+      display: none;
+      width: 340px;
+      flex-shrink: 0;
+      background: #fff;
+      border-left: 1px solid #e8e8e4;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    #sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 24px 22px 32px;
+    }
+
+    /* ── Empty state ────────────────────────────────────────────── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px 40px;
+      text-align: center;
+    }
+    .empty-state-icon { font-size: 42px; margin-bottom: 14px; opacity: 0.6; }
+    .empty-state-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .empty-state-sub { font-size: 13px; color: #aaa; line-height: 1.5; }
+
+    /* ── Markers ────────────────────────────────────────────────── */
+    .mk-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .mk-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 13px;
+      height: 38px;
+      border-radius: 19px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.1px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+      border: 2.5px solid rgba(255,255,255,0.45);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.22), 0 1px 3px rgba(0,0,0,0.14);
+      white-space: nowrap;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.22s ease,
+                  opacity 0.2s;
+      pointer-events: all;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-pill.home {
+      height: 46px;
+      border-radius: 23px;
+      font-size: 13px;
+      padding: 0 16px;
+      border-width: 3px;
+      border-color: rgba(255,255,255,0.6);
+    }
+
+    .mk-pill.home-pulse {
+      animation: home-pulse 2.5s ease infinite;
+    }
+
+    @keyframes home-pulse {
+      0%,100% { box-shadow: 0 3px 10px rgba(0,0,0,0.22), 0 0 0 0 rgba(255,107,107,0.5); }
+      50%      { box-shadow: 0 3px 10px rgba(0,0,0,0.22), 0 0 0 9px rgba(255,107,107,0); }
+    }
+
+    .mk-pill.dim {
+      opacity: 0.42;
+      filter: saturate(0.5) brightness(0.9);
+    }
+
+    .mk-pill.selected {
+      transform: scale(1.16) !important;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.28),
+                  0 0 0 3px rgba(255,255,255,0.85) !important;
+      animation: none !important;
+    }
+
+    .mk-tail {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      margin-top: -1px;
+    }
+
+    /* Dim tail */
+    .mk-tail.dim { opacity: 0.35; }
+
+    /* ── Tooltips ───────────────────────────────────────────────── */
+    .leaflet-tooltip.mk-tip {
+      background: rgba(18,18,18,0.9);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      pointer-events: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      max-width: 220px;
+    }
+    .leaflet-tooltip.mk-tip::before { display: none; }
+
+    .tip-name  { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+    .tip-walk  { font-size: 12px; opacity: 0.65; margin-bottom: 3px; }
+    .tip-vibe  { font-size: 12px; opacity: 0.6; line-height: 1.45; }
+
+    .tip-train {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255,200,60,0.2);
+      color: #FFD060;
+      padding: 2px 7px;
+      border-radius: 8px;
+    }
+
+    /* ── Neighborhood detail ────────────────────────────────────── */
+    .nd-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #f0f0ec;
+    }
+
+    .nd-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .nd-name {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+      color: #111;
+    }
+
+    .nd-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin-top: 5px;
+    }
+
+    .nd-walk {
+      font-size: 13px;
+      color: #777;
+      font-weight: 500;
+    }
+
+    .nd-train-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #FFF8E0;
+      color: #A07000;
+      padding: 3px 9px;
+      border-radius: 10px;
+      letter-spacing: 0.1px;
+    }
+
+    .nd-home-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #FFE8E8;
+      color: #C03030;
+      padding: 3px 9px;
+      border-radius: 10px;
+    }
+
+    .nd-vibe {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #555;
+      margin-bottom: 22px;
+    }
+
+    .nd-spots-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #bbb;
+      margin-bottom: 11px;
+    }
+
+    .spot {
+      background: #f8f8f5;
+      border: 1px solid #eeeeea;
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin-bottom: 9px;
+    }
+
+    .spot-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .spot-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: #111;
+      line-height: 1.25;
+    }
+
+    .spot-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: 0.2px;
+    }
+
+    .spot-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 9px;
+    }
+
+    .spot-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: #aaa;
+      font-weight: 500;
+    }
+
+    /* Tag palette */
+    .t-sushi    { background: #FDECEA; color: #B71C1C; }
+    .t-ramen    { background: #FFF3E0; color: #E65100; }
+    .t-izakaya  { background: #E3F2FD; color: #1565C0; }
+    .t-bar      { background: #EDE7F6; color: #6A1B9A; }
+    .t-music    { background: #E8F5E9; color: #1B5E20; }
+    .t-activity { background: #E0F7FA; color: #006064; }
+    .t-bowling  { background: #FCE4EC; color: #880E4F; }
+    .t-culture  { background: #E8EAF6; color: #283593; }
+    .t-cafe     { background: #EFEBE9; color: #4E342E; }
+    .t-shopping { background: #FFFDE7; color: #F57F17; }
+    .t-default  { background: #ECEFF1; color: #37474F; }
+
+    /* ── Bottom drawer (mobile) ─────────────────────────────────── */
+    #drawer {
+      position: fixed;
+      inset: auto 0 0 0;
+      background: #fff;
+      border-radius: 18px 18px 0 0;
+      box-shadow: 0 -6px 32px rgba(0,0,0,0.13);
+      z-index: 2000;
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 72vh;
+      display: flex;
+      flex-direction: column;
+      will-change: transform;
+    }
+
+    #drawer.open { transform: translateY(0); }
+
+    #drawer-drag {
+      flex-shrink: 0;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #drawer-drag:active { cursor: grabbing; }
+
+    #drag-handle {
+      width: 34px;
+      height: 4px;
+      background: #d8d8d4;
+      border-radius: 2px;
+    }
+
+    #drawer-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 20px 36px;
+      overscroll-behavior: contain;
+    }
+
+    /* ── Overlay ────────────────────────────────────────────────── */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.22);
+      z-index: 1999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    #overlay.on { opacity: 1; pointer-events: all; }
+
+    /* ── Legend popup ───────────────────────────────────────────── */
+    #legend {
+      position: fixed;
+      top: 64px;
+      right: 14px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+      padding: 16px 18px;
+      z-index: 3000;
+      min-width: 210px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px);
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+    #legend.on { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+    .leg-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #ccc;
+      margin-bottom: 11px;
+    }
+
+    .leg-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .leg-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .leg-divider {
+      height: 1px;
+      background: #f0f0ec;
+      margin: 10px 0;
+    }
+
+    .leg-note {
+      font-size: 11.5px;
+      color: #bbb;
+      line-height: 1.55;
+    }
+
+    /* ── Leaflet overrides ──────────────────────────────────────── */
+    .leaflet-container { background: #e8e4de; }
+    .leaflet-control-attribution {
+      font-size: 10px !important;
+      background: rgba(255,255,255,0.65) !important;
+    }
+    .leaflet-control-zoom {
+      border-radius: 10px !important;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12) !important;
+    }
+    .leaflet-control-zoom a {
+      font-size: 18px !important;
+      line-height: 30px !important;
+      font-weight: 400 !important;
+    }
+
+    /* ── Map loading overlay ───────────────────────────────────── */
+    #map-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(245,244,240,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 800;
+      gap: 12px;
+      font-size: 13px;
+      color: #999;
+      font-weight: 500;
+    }
+    .load-spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #e0e0dc;
+      border-top-color: #FF4444;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .load-error {
+      background: #fff3cd; color: #856404;
+      padding: 12px 18px; border-radius: 10px; font-weight: 600;
+      text-align: center; max-width: 260px;
+    }
+
+    /* ── Polygon labels (centered on ward polygons) ─────────────── */
+    .poly-label-wrap {
+      pointer-events: none;
+      display: flex; justify-content: center; align-items: center;
+      width: 140px;
+    }
+    .poly-label {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,0.88);
+      border: 1.5px solid rgba(0,0,0,0.07);
+      padding: 3px 9px; border-radius: 10px;
+      font-size: 11px; font-weight: 700; color: #1a1a1a;
+      white-space: nowrap;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.13);
+      letter-spacing: 0.1px;
+    }
+    .pl-train {
+      font-size: 9px; font-weight: 700;
+      background: #FFF8E0; color: #9A7000;
+      padding: 1px 5px; border-radius: 5px;
+    }
+
+    /* ── Sub-ward dot markers ───────────────────────────────────── */
+    .dot-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dot-circ {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.75);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.24), 0 1px 3px rgba(0,0,0,0.14);
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.2s ease;
+    }
+    .dot-circ.dot-sel {
+      transform: scale(1.38);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 0 3px rgba(255,255,255,0.88);
+    }
+    .dot-circ.dot-dim { opacity: 0.25; filter: saturate(0.35); }
+    .dot-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px; font-weight: 700; color: #111;
+      background: rgba(255,255,255,0.92);
+      padding: 2px 6px; border-radius: 7px;
+      margin-top: 3px; white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.11);
+    }
+    .dot-name.dot-dim { opacity: 0.35; }
+    .dot-train { font-size: 8px; margin-top: 1px; opacity: 0.65; }
+
+    /* ── Desktop layout (768px+) ────────────────────────────────── */
+    @media (min-width: 768px) {
+      #drawer, #overlay { display: none !important; }
+
+      #sidebar { display: flex; }
+
+      #topbar { height: 60px; padding: 0 20px; }
+      .topbar-title { font-size: 17px; }
+
+      #filter-bar { padding: 0 20px; gap: 8px; }
+
+      #sidebar-scroll { padding: 26px 24px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Top bar -->
+  <header id="topbar">
+    <div class="topbar-logo">🗾</div>
+    <div class="topbar-text">
+      <div class="topbar-title">Tokyo Explorer</div>
+      <div class="topbar-sub">Meguro Base Camp · 3–4 Day Guide</div>
+    </div>
+    <button id="legend-btn" aria-label="Map legend">🗺</button>
+  </header>
+
+  <!-- Filter chips -->
+  <div id="filter-bar">
+    <button class="chip active" data-f="all">✦ All</button>
+    <button class="chip" data-f="food">🍜 Food</button>
+    <button class="chip" data-f="nightlife">🍸 Nightlife</button>
+    <button class="chip" data-f="music">🎵 Music</button>
+    <button class="chip" data-f="activity">🎯 Activity</button>
+    <button class="chip" data-f="culture">⛩ Culture</button>
+  </div>
+
+  <!-- Main area -->
+  <div id="main-area">
+
+    <!-- Map -->
+    <div id="map-wrap">
+      <div id="map"></div>
+      <div id="map-loading">
+        <div class="load-spinner"></div>
+        <span>Loading neighborhood boundaries…</span>
+      </div>
+    </div>
+
+    <!-- Desktop sidebar -->
+    <aside id="sidebar">
+      <div id="sidebar-scroll">
+        <div class="empty-state" id="sidebar-empty">
+          <div class="empty-state-icon">📍</div>
+          <div class="empty-state-title">Pick a neighborhood</div>
+          <div class="empty-state-sub">Tap any marker on the map to see top spots, vibes, and recommendations.</div>
+        </div>
+        <div id="sidebar-detail" style="display:none"></div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay"></div>
+
+<!-- Bottom drawer (mobile) -->
+<div id="drawer">
+  <div id="drawer-drag" role="button" aria-label="Close panel">
+    <div id="drag-handle"></div>
+  </div>
+  <div id="drawer-scroll">
+    <div id="drawer-detail"></div>
+  </div>
+</div>
+
+<!-- Legend popup -->
+<div id="legend" role="tooltip" aria-label="Map legend">
+  <div class="leg-title">Map Legend</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#FF4444"></div>★ Home base (Meguro)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#4ECDC4"></div>Within easy walk (&lt; 30 min)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#45B7D1"></div>Moderate walk (30–60 min)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#96CEB4"></div>Long walk (60–90 min)</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#ddd"></div>Train recommended (90 min+)</div>
+  <div class="leg-divider"></div>
+  <div class="leg-note">Greyed markers = best reached by train. Walk times assume ~20 min/mile on flat terrain.</div>
+</div>
+
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   NEIGHBORHOOD DATA  (3 placeholders — full set loaded next)
+════════════════════════════════════════════════════════════ */
+const HOODS = [
+
+  /* ── 1. MEGURO ──────────────────────────────────────────────── */
+  {
+    id: "meguro", name: "Meguro",
+    lat: 35.6334, lng: 139.7157,
+    color: "#FF4444", walkMin: 0,
+    isHome: true, inRange: true,
+    cats: ["food", "activity", "nightlife", "culture"],
+    vibeShort: "Your home base — residential calm meets a buzzing food scene",
+    vibe: "Meguro balances quiet, tree-lined residential streets with an excellent food and bar scene. The scenic Meguro River draws crowds for hanami in spring, while the backstreets hide independent izakayas, specialty coffee, and boutiques. A deeply liveable, unhurried neighborhood — the perfect launching pad for bigger adventures.",
+    spots: [
+      { name: "Meguro Parasitological Museum", desc: "The world's only parasite museum — free, bizarre, and genuinely fascinating. Don't miss the 8.8-metre tapeworm.", hours: "10am–5pm, closed Mon & Tue", price: "Free", cat: "Culture" },
+      { name: "Kohmen Ramen", desc: "Rich tonkotsu broth with perfectly springy noodles. Counter seating, no frills, total focus.", hours: "11am–11pm, closed Sun", price: "¥", cat: "Ramen" },
+      { name: "Tavern on Fifth", desc: "Laid-back sports bar with dart boards, pool table, and ice-cold Sapporo on tap.", hours: "5pm–2am", price: "¥¥", cat: "Activity" },
+      { name: "Meguro Gajoen", desc: "Spectacular hotel complex with ornate Meiji-era interiors — free to explore the lobby and corridor galleries.", hours: "10am–9pm", price: "Free", cat: "Culture" },
+      { name: "Sushi Nakamura Meguro", desc: "Intimate counter sushi with seasonal omakase in a quiet Meguro backstreet. Book at least a week ahead.", hours: "12–2pm, 6–10pm, closed Sun", price: "¥¥¥¥", cat: "Sushi" }
+    ]
+  },
+
+  /* ── 2. NAKAMEGURO ──────────────────────────────────────────── */
+  {
+    id: "nakameguro", name: "Nakameguro",
+    lat: 35.6441, lng: 139.6984,
+    color: "#00C4B4", walkMin: 15,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "music", "culture"],
+    vibeShort: "Canal-side cool — boutiques, third-wave coffee, late-night bars",
+    vibe: "Tokyo's most photogenic neighborhood lines the Meguro River with cherry trees, concept stores, and the city's best bars. By day it's specialty coffee roasters and indie fashion; by night the canal lanes fill with the city's coolest crowd. Almost entirely locals and expats — zero tourist traps.",
+    spots: [
+      { name: "Onibus Coffee", desc: "Iconic third-wave roaster in a converted garage. Standing-room only, exceptional single-origin espresso.", hours: "9am–6pm", price: "¥", cat: "Cafe" },
+      { name: "Tramp Darts Bar", desc: "High-quality dart boards, strong cocktails, and a reliably good crowd. Great for a couple's evening.", hours: "5pm–3am", price: "¥¥", cat: "Activity" },
+      { name: "Nakameguro Taproom", desc: "Baird Beer's flagship tap room overlooking the river — a dozen rotating drafts from Japan's best craft brewery.", hours: "5pm–midnight", price: "¥¥", cat: "Bar" },
+      { name: "Liquidroom", desc: "Mid-size live venue beloved by Tokyo's indie, electronic, and rock scenes. One of the city's top music rooms.", hours: "Doors vary by show", price: "¥¥–¥¥¥", cat: "Music" },
+      { name: "Sushi Saito Nakameguro", desc: "Counter-only omakase with seasonal fish sourced from Tsukiji each morning. Book 2 weeks ahead.", hours: "6pm–11pm, closed Sun & Mon", price: "¥¥¥¥", cat: "Sushi" }
+    ]
+  },
+
+  /* ── 3. DAIKANYAMA ──────────────────────────────────────────── */
+  {
+    id: "daikanyama", name: "Daikanyama",
+    lat: 35.6494, lng: 139.7033,
+    color: "#D4880A", walkMin: 20,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "culture"],
+    vibeShort: "Tokyo's Left Bank — design, wine, and the world's best bookstore",
+    vibe: "Daikanyama is where the fashion industry, architects, and creative directors live and play. The streets are immaculate, the coffee is serious, and the wine lists are excellent. Tsutaya Books — a design-forward bookstore open until 2am — is reason alone to visit. Quieter and more refined than neighboring Nakameguro.",
+    spots: [
+      { name: "Tsutaya Books T-Site", desc: "Stunning lifestyle bookstore in a bamboo-grid building. Browse books, music, and film until 2am with great coffee.", hours: "7am–2am", price: "Free to browse", cat: "Culture" },
+      { name: "Ivy Place", desc: "Elegant bar-restaurant in a garden terrace setting. Perfect for a long evening with cocktails and wood-fired food.", hours: "11am–midnight", price: "¥¥¥", cat: "Bar" },
+      { name: "Sign", desc: "Low-key music bar beloved by Daikanyama's creative crowd. Great vinyl selection, solid cocktails, no attitude.", hours: "7pm–2am", price: "¥¥", cat: "Bar" },
+      { name: "Daichi Sushi Daikanyama", desc: "Relaxed counter sushi with a neighborhood regulars vibe and excellent value seasonal fish.", hours: "12–2pm, 5:30–10pm, closed Mon", price: "¥¥¥", cat: "Sushi" },
+      { name: "Frames Daikanyama", desc: "Pool-table bar with craft cocktails, sports on screen, and a loyal local crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity" }
+    ]
+  },
+
+  /* ── 4. EBISU ───────────────────────────────────────────────── */
+  {
+    id: "ebisu", name: "Ebisu",
+    lat: 35.6467, lng: 139.7099,
+    color: "#2471A3", walkMin: 18,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "culture"],
+    vibeShort: "Polished and grown-up — beer history, great dining, hidden alleys",
+    vibe: "Named after the Yebisu Brewery that once occupied the whole site, Ebisu is one of Tokyo's most polished neighborhoods. Garden Place offers elevated dining and city views, while the izakaya alleys near the station are where office workers unwind. The quieter, more adult alternative to Shibuya — 10 minutes away.",
+    spots: [
+      { name: "Yebisu Beer Museum", desc: "Free museum inside the historic brewery. Paid tasting flights of Yebisu's full range — the Premium is the one.", hours: "11am–7pm, closed Mon", price: "¥ (tastings)", cat: "Culture" },
+      { name: "Ebisu Yokocho", desc: "Retro covered alley of tiny izakayas packed with office workers after dark. Smoky, loud, and completely authentic.", hours: "5pm–1am", price: "¥¥", cat: "Izakaya" },
+      { name: "Craft Beer Market Ebisu", desc: "30+ rotating taps of Japanese and international craft beer in a casual pub setting.", hours: "11:30am–11pm", price: "¥¥", cat: "Bar" },
+      { name: "Ramen Afuri Ebisu", desc: "Light yuzu shio ramen and rich chicken broth — two radically different, both excellent bowls.", hours: "11am–5am", price: "¥¥", cat: "Ramen" },
+      { name: "Ebisu Garden Place Rooftop Bar", desc: "Sweeping views over Tokyo with well-made cocktails. The best opening move for an Ebisu evening.", hours: "5pm–midnight", price: "¥¥¥", cat: "Bar" }
+    ]
+  },
+
+  /* ── 5. SHIBUYA ─────────────────────────────────────────────── */
+  {
+    id: "shibuya", name: "Shibuya",
+    lat: 35.6580, lng: 139.7016,
+    color: "#E87722", walkMin: 28,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "music", "activity", "culture"],
+    vibeShort: "Electric, chaotic, unmissable — the beating heart of Tokyo",
+    vibe: "The Shibuya Scramble, the neon towers, the sheer volume of humanity — this is the Tokyo of imagination turned to 11. Exhausting and exhilarating in equal measure. Go at night when the lights blaze, grab ramen at 2am, then retreat. Multiple floors of entertainment, club music on every street, and yakitori smoke in every alley.",
+    spots: [
+      { name: "Round 1 Stadium Shibuya", desc: "5-floor entertainment megaplex: bowling, batting cages, darts, full arcade, karaoke. Runs until 5am daily.", hours: "10am–5am daily", price: "¥¥", cat: "Activity" },
+      { name: "Ichiran Ramen (24hr)", desc: "Solo-booth tonkotsu ramen. Order by form, eat in your private flavor-concentration booth. Open all night.", hours: "24 hours", price: "¥¥", cat: "Ramen" },
+      { name: "Womb", desc: "Tokyo's premier techno and electronic club. 4 floors, a brutal sound system, and world-class DJs every weekend.", hours: "Fri–Sat 11pm–5am", price: "¥¥¥", cat: "Music" },
+      { name: "Nonbei Yokocho", desc: "Narrow alley of lantern-lit micro-bars, some seating only 8 people. Wander in, order whatever, stay all night.", hours: "6pm–2am", price: "¥¥", cat: "Bar" },
+      { name: "Shibuya Crossing Viewpoint", desc: "Watch 3,000 people scramble simultaneously from the Starbucks window or Mag's Park observation deck. Free.", hours: "Always open", price: "Free", cat: "Culture" }
+    ]
+  },
+
+  /* ── 6. HARAJUKU / OMOTESANDO ───────────────────────────────── */
+  {
+    id: "harajuku", name: "Harajuku",
+    lat: 35.6702, lng: 139.7027,
+    color: "#C0398C", walkMin: 38,
+    isHome: false, inRange: true,
+    cats: ["food", "culture", "nightlife"],
+    vibeShort: "Fashion extremes and sacred forests — crepes, couture, and Meiji Shrine",
+    vibe: "Harajuku is two worlds in one: Takeshita Street's cosplay fashion chaos, and the forested path to Meiji Shrine. Omotesando's boulevard of luxury boutiques connects them. Evening brings a different crowd — the restaurants and bars around Omotesando are refined, quiet, and excellent.",
+    spots: [
+      { name: "Meiji Shrine", desc: "Sacred Shinto shrine set in 170 acres of forested parkland. Profoundly calm even on crowded weekends. Go early.", hours: "Sunrise–sunset", price: "Free", cat: "Culture" },
+      { name: "Harajuku Gyoza Lou", desc: "Legendary gyoza joint — fried, boiled, or pan-fried, the only question is how many plates.", hours: "11:30am–10:30pm, closed Mon", price: "¥", cat: "Izakaya" },
+      { name: "Omotesando Hills", desc: "Herzog & de Meuron-designed luxury mall built along a spiral ramp. Worth it for the architecture alone.", hours: "11am–9pm", price: "Free to browse", cat: "Culture" },
+      { name: "Commune 246", desc: "Outdoor container-bar food village near Omotesando. Casual, eclectic, great for watching the crowd.", hours: "11am–11pm", price: "¥¥", cat: "Bar" },
+      { name: "Sushisho Saito Omotesando", desc: "One of Tokyo's finest counter sushi experiences — 9 seats, seasonal omakase, book weeks ahead.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥¥¥", cat: "Sushi" }
+    ]
+  },
+
+  /* ── 7. SHIMOKITAZAWA ───────────────────────────────────────── */
+  {
+    id: "shimokitazawa", name: "Shimokitazawa",
+    lat: 35.6613, lng: 139.6677,
+    color: "#7B1FA2", walkMin: 52,
+    isHome: false, inRange: true,
+    cats: ["nightlife", "music", "food"],
+    vibeShort: "Tokyo's indie music heartland — live houses, vintage, izakayas",
+    vibe: "Shimokitazawa is where Tokyo's musicians, students, and creative types have gravitated for decades. The streets are slightly ramshackle, the izakayas are no-frills perfect, and on any given night there are 10+ live music shows within a 5-minute walk. Anti-commercial, ungentrified, and irreplaceable.",
+    spots: [
+      { name: "Shelter", desc: "One of Tokyo's most beloved live houses — indie, punk, and rock in an intimate basement room since 1992.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
+      { name: "Club Que", desc: "Iconic basement venue, home to the city's finest indie rock programming. Legendary 400-person capacity.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
+      { name: "Shiraume Izakaya", desc: "Classic old-school izakaya with excellent skewers and a deep shochu list. Packed most nights.", hours: "5pm–midnight, closed Sun", price: "¥¥", cat: "Izakaya" },
+      { name: "Daisy Bar", desc: "Friendly neighborhood bar with vinyl records spinning and a cheerful, mixed crowd all night.", hours: "8pm–3am", price: "¥¥", cat: "Bar" },
+      { name: "Garage Shimokitazawa", desc: "Raw, loud, and essential: punk and alternative live music in a no-frills basement space.", hours: "Doors vary by show", price: "¥¥", cat: "Music" }
+    ]
+  },
+
+  /* ── 8. SANGENJAYA ──────────────────────────────────────────── */
+  {
+    id: "sangenjaya", name: "Sangenjaya",
+    lat: 35.6440, lng: 139.6696,
+    color: "#F06292", walkMin: 45,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "activity"],
+    vibeShort: "Young, local, unpretentious — Tokyo's best izakaya crawl neighborhood",
+    vibe: "Sangenjaya's tight lanes and covered arcades are packed with izakayas, ramen shops, and neighborhood bars serving a young, local crowd who care about good food at fair prices. One of Tokyo's most authentic evening experiences — and never overrun with tourists.",
+    spots: [
+      { name: "Batting Center Sangenjaya", desc: "Local batting cages with 80–130 kph speed settings and short queues. ¥300 per round, no reservation needed.", hours: "10am–10pm", price: "¥", cat: "Activity" },
+      { name: "Sancha Darts Bar", desc: "Multiple professional dart boards, strong cocktails, and a reliably fun mixed crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity" },
+      { name: "Izakaya Uoshin", desc: "Beloved neighborhood fish izakaya with extremely fresh sashimi platters and cold Kirin draft.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Bar Three Sangenjaya", desc: "No-frills shot bar packed after midnight. Dirt-cheap whisky highballs and very loud music.", hours: "7pm–3am", price: "¥", cat: "Bar" },
+      { name: "Ramen Yokozuna", desc: "Hearty, beefy ramen in a stadium-themed shop. The championship bowl is genuinely enormous.", hours: "11am–3am", price: "¥", cat: "Ramen" }
+    ]
+  },
+
+  /* ── 9. JIYUGAOKA ───────────────────────────────────────────── */
+  {
+    id: "jiyugaoka", name: "Jiyugaoka",
+    lat: 35.6078, lng: 139.6919,
+    color: "#00A86B", walkMin: 42,
+    isHome: false, inRange: true,
+    cats: ["food", "culture"],
+    vibeShort: "Tokyo's Little Paris — sweets, European vibes, and great sushi",
+    vibe: "Jiyugaoka earns its Little Paris nickname with European-style cafes, excellent patisseries, and leafy streets. It's genuinely charming and unhurried — perfect for a slow morning or long lunch. The neighborhood is famous for sweets, but solid ramen, sushi, and wine bars are well represented too.",
+    spots: [
+      { name: "Mont St. Clair", desc: "Legendary patisserie by star chef Tsujiguchi Hironobu. Lines form early every day — still worth every minute.", hours: "11am–7pm, closed Tue", price: "¥¥", cat: "Cafe" },
+      { name: "Jiyugaoka Sweets Forest", desc: "Whimsical theme-park-style dessert complex with six specialty sweets shops under one roof.", hours: "10am–8pm", price: "¥¥", cat: "Cafe" },
+      { name: "Sushi Kurihara", desc: "Neighborhood counter sushi with a casual atmosphere and excellent value lunch sets.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥", cat: "Sushi" },
+      { name: "Bar Benfiddich Jiyugaoka", desc: "Tiny natural wine and cocktail bar with expert bartenders and a great late-night vibe.", hours: "7pm–1am, closed Sun", price: "¥¥¥", cat: "Bar" },
+      { name: "Ramen Honda", desc: "Local legend: rich shoyu broth slowly evolving for 30 years. Cash only, always a short queue.", hours: "11am–10pm, closed Wed", price: "¥", cat: "Ramen" }
+    ]
+  },
+
+  /* ── 10. GOTANDA ────────────────────────────────────────────── */
+  {
+    id: "gotanda", name: "Gotanda",
+    lat: 35.6262, lng: 139.7233,
+    color: "#FF8C00", walkMin: 22,
+    isHome: false, inRange: true,
+    cats: ["food", "activity", "nightlife"],
+    vibeShort: "Underrated local hub — bowling, award ramen, and zero pretension",
+    vibe: "Gotanda doesn't make the travel guides, and locals love it for exactly that reason. A working neighborhood with a down-to-earth izakaya scene, excellent ramen, and actual bowling lanes — no queues, no hype, honest prices. A 20-minute walk from Meguro and a welcome escape from curated cool.",
+    spots: [
+      { name: "Mensho Tokyo Gotanda", desc: "Award-winning ramen with a rotating seasonal menu. The lamb broth is a genuine standout; sell out by noon.", hours: "11am–3pm, 6–10pm, closed Mon", price: "¥¥", cat: "Ramen" },
+      { name: "Gotanda Bowling Center", desc: "Full 20-lane bowling alley with shoe rental and a bar. Local crowd, no tourist queues, great fun.", hours: "10am–midnight", price: "¥¥", cat: "Bowling" },
+      { name: "Izakaya Hanamichi", desc: "Old-school izakaya with grilled fish, house sake, and the best all-you-can-drink deal in the area.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Standing Sushi Gotanda", desc: "Standing-bar sushi with fresh cuts at excellent prices. No reservation, in and out in 30 minutes.", hours: "11:30am–10pm", price: "¥¥", cat: "Sushi" },
+      { name: "JILL'S Bar Gotanda", desc: "Cocktail bar with a dart board, knowledgeable bartenders, and a loyal, relaxed local following.", hours: "6pm–2am, closed Sun", price: "¥¥", cat: "Activity" }
+    ]
+  },
+
+  /* ── 11. SHINJUKU ───────────────────────────────────────────── */
+  {
+    id: "shinjuku", name: "Shinjuku",
+    lat: 35.6938, lng: 139.7034,
+    color: "#B91C1C", walkMin: 58,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "music", "activity", "culture"],
+    vibeShort: "Tokyo's entertainment capital — Golden Gai, Memory Lane, no bedtime",
+    vibe: "Shinjuku contains Tokyo's most concentrated dose of nightlife, from the smoky lantern-lit alleys of Omoide Yokocho to the 200-bar labyrinth of Golden Gai. Every type of food, drink, and entertainment exists here — the challenge is choosing. It runs 24 hours and shows no sign of tiring.",
+    spots: [
+      { name: "Golden Gai", desc: "200+ micro-bars crammed into 6 narrow alleys, each seating 5–10 people. The most Tokyo place on earth.", hours: "8pm–4am", price: "¥¥", cat: "Bar" },
+      { name: "Omoide Yokocho", desc: "Smoky alley of yakitori stalls under the train tracks. Eat charred chicken skewers with cold beer at 11pm.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Batting Center New Shinjuku", desc: "Multiple cages steps from the station — 10, 12, and 15 pitches per ¥100. Great for a quick session.", hours: "11am–11pm", price: "¥", cat: "Activity" },
+      { name: "Fuunji Tsukemen", desc: "World-famous thick-broth tsukemen — always a queue, always worth it. Arrive before opening.", hours: "11am–3pm, 5–10pm, closed Sun", price: "¥¥", cat: "Ramen" },
+      { name: "Bar Albatross Golden Gai", desc: "Three-story chandelier-filled bar in the heart of Golden Gai. Tokyo's most beautiful tiny bar.", hours: "6pm–5am", price: "¥¥", cat: "Bar" }
+    ]
+  },
+
+  /* ── 12. ROPPONGI ───────────────────────────────────────────── */
+  {
+    id: "roppongi", name: "Roppongi",
+    lat: 35.6628, lng: 139.7314,
+    color: "#4527A0", walkMin: 42,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "music", "culture"],
+    vibeShort: "International and electric — world-class art, clubs, and late nights",
+    vibe: "Roppongi is Tokyo's international nightlife district: loud, bright, and operating till dawn. Beneath the party image is a genuine art scene anchored by Mori Art Museum. The best approach: visit the museum at dusk for city views, then let the evening unravel from there.",
+    spots: [
+      { name: "Mori Art Museum", desc: "Contemporary art 54 floors up in Roppongi Hills. The Tokyo City View observation deck is included in admission.", hours: "10am–10pm, Tue to 5pm", price: "¥¥¥", cat: "Culture" },
+      { name: "SuperDeluxe", desc: "Legendary underground events space for experimental music, live performance, and art shows. Always interesting.", hours: "Event-based, usually 7pm–1am", price: "¥¥", cat: "Music" },
+      { name: "Agave Bar", desc: "400+ agave spirits (tequila, mezcal, raicilla) and genuinely expert bartenders. A pilgrimage for serious drinkers.", hours: "6pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
+      { name: "Torii Darts Bar Roppongi", desc: "Quality soft-tip dart boards, private booths, and late-night service until 5am on weekends.", hours: "6pm–5am Fri–Sat, 6pm–2am weekdays", price: "¥¥", cat: "Activity" },
+      { name: "Ramen Jin Roppongi", desc: "No-frills counter ramen in the middle of the party district — perfect midnight fuel after the clubs.", hours: "11am–5am", price: "¥", cat: "Ramen" }
+    ]
+  },
+
+  /* ── 13. AZABU-JUBAN ────────────────────────────────────────── */
+  {
+    id: "azabu_juban", name: "Azabu-Juban",
+    lat: 35.6550, lng: 139.7365,
+    color: "#0288D1", walkMin: 38,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "culture"],
+    vibeShort: "Upscale village — world-class sushi, great izakayas, embassy crowd",
+    vibe: "Azabu-Juban is Tokyo at its most quietly sophisticated: a compact shopping street ringed by embassies, private clubs, and some of the city's finest restaurants. It's unpretentious for its price point, with neighborhood izakayas next to three-Michelin spots. The annual summer festival draws 500,000 people — wild energy in an otherwise serene area.",
+    spots: [
+      { name: "Sushi Sho Azabu", desc: "One of Tokyo's most legendary omakase counters. Nearly impossible to book — try walk-in for lunch.", hours: "12–2pm, 6–9pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi" },
+      { name: "Ushigoro Bambina", desc: "Premium wagyu yakiniku in a sleek modern setting. Order the A5 sirloin and pair with cold sake.", hours: "5pm–11pm", price: "¥¥¥¥", cat: "Izakaya" },
+      { name: "Nanticha Thai Izakaya", desc: "Beloved local spot blending Thai and Japanese drinking food. Packed most nights with a loyal neighborhood crowd.", hours: "6pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Maru Cocktail Bar", desc: "Cozy cocktail bar at the heart of the expat community. Expertly made drinks, never overcrowded.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
+      { name: "Toufuya Ukai", desc: "Tofu kaiseki cuisine in a stunning Edo-era merchant house with a koi garden. One of Tokyo's most beautiful meals.", hours: "11am–3pm, 5–9pm", price: "¥¥¥¥", cat: "Culture" }
+    ]
+  },
+
+  /* ── 14. HIROO ──────────────────────────────────────────────── */
+  {
+    id: "hiroo", name: "Hiroo",
+    lat: 35.6499, lng: 139.7218,
+    color: "#546E7A", walkMin: 28,
+    isHome: false, inRange: true,
+    cats: ["food", "nightlife", "culture"],
+    vibeShort: "Expat village meets Japanese tradition — great dining, zero attitude",
+    vibe: "Hiroo sits between Roppongi and Ebisu, home to embassies, international schools, and some of Tokyo's most considered restaurants. Calm, adult, and unhurried — the anti-Roppongi when you want quality food and conversation without the noise. The shopping street has excellent options in every direction.",
+    spots: [
+      { name: "Hiroo Onsen Bathhouse", desc: "Neighborhood sentō (public bath) with hot mineral baths — a genuine Tokyo experience at local prices.", hours: "3pm–11pm, closed Thu", price: "¥", cat: "Culture" },
+      { name: "Gyoza Hohei", desc: "Legendary back-street gyoza specialist — fried, boiled, and steamed versions, all perfect.", hours: "11:30am–2:30pm, 5:30–10pm, closed Mon", price: "¥", cat: "Izakaya" },
+      { name: "National Azabu Supermarket", desc: "Iconic international supermarket serving Tokyo's expat community since 1975. A genuine Hiroo landmark.", hours: "9:30am–9pm", price: "Free to browse", cat: "Culture" },
+      { name: "Sumire Bar Hiroo", desc: "Cozy neighborhood bar with an excellent Japanese whisky selection and expert recommendations.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
+      { name: "Ramen Mentendo Hiroo", desc: "Rich, deeply satisfying chicken-based broth in a clean modern setting. One of Hiroo's best-kept secrets.", hours: "11am–9pm, closed Wed", price: "¥¥", cat: "Ramen" }
+    ]
+  },
+
+  /* ── 15. SETAGAYA ───────────────────────────────────────────── */
+  {
+    id: "setagaya", name: "Setagaya",
+    lat: 35.6485, lng: 139.6533,
+    color: "#00695C", walkMin: 55,
+    isHome: false, inRange: true,
+    cats: ["culture", "activity", "food"],
+    vibeShort: "Quiet and local — lucky cat temple, batting cages, real Tokyo life",
+    vibe: "Setagaya ward is where a lot of Tokyo's creative class actually lives. Away from the tourist trail it rewards the curious: the original lucky-cat temple draws pilgrims from across Japan, the local izakayas are excellent value, and the batting cages attract everyone from school kids to salary workers. Properly local Tokyo.",
+    spots: [
+      { name: "Gotoku-ji Temple", desc: "The birthplace of the maneki-neko lucky cat. Hundreds of ceramic cats cover the grounds — unexpectedly moving.", hours: "9am–5pm", price: "Free", cat: "Culture" },
+      { name: "Setagaya Batting Center", desc: "Well-maintained cages with 80–130 kph settings and friendly staff. ¥300 per round, no queue.", hours: "10am–10pm", price: "¥", cat: "Activity" },
+      { name: "Setagaya Bowl", desc: "Full-service bowling alley with 24 lanes, a bar, and weekend DJ nights.", hours: "10am–midnight", price: "¥¥", cat: "Bowling" },
+      { name: "Ramen Shimamoto", desc: "Quietly revered miso ramen with a corn-butter option that tastes like pure winter comfort.", hours: "11:30am–9pm, closed Tue", price: "¥", cat: "Ramen" },
+      { name: "Izakaya Mokichi", desc: "Family-run izakaya with an encyclopedic sake list and the best old-school kushiyaki skewers in the ward.", hours: "5pm–11pm, closed Mon", price: "¥¥", cat: "Izakaya" }
+    ]
+  },
+
+  /* ── 16. KOENJI ─────────────────────────────────────────────── */
+  {
+    id: "koenji", name: "Koenji",
+    lat: 35.7053, lng: 139.6493,
+    color: "#FFC300", walkMin: 72,
+    isHome: false, inRange: true,
+    cats: ["nightlife", "music", "culture", "food"],
+    vibeShort: "Bohemian Tokyo — vintage records, punk clubs, zero pretense",
+    vibe: "Koenji is Tokyo's most defiantly alternative neighborhood: vintage record shops, underground live houses, secondhand fashion, and izakayas unchanged since the 1980s. The antithesis of Harajuku's commercialized cool. Come for a live show, stay for the dive bars and cheap ramen at 2am.",
+    spots: [
+      { name: "Koenji High", desc: "Mid-size live venue hosting some of Tokyo's best indie, experimental, and underground rock shows.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
+      { name: "20000V", desc: "Basement club known for raw punk, noise, and DIY indie shows. Tiny, loud, and absolutely authentic.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
+      { name: "Enban Record Bar", desc: "Record shop and bar hybrid where DJs spin vinyl and whisky is cheap. Tokyo counterculture at its finest.", hours: "3pm–midnight, Fri–Sun to 2am", price: "¥¥", cat: "Bar" },
+      { name: "Ramen Jirou Koenji", desc: "Enormous bowls of heavy, porky ramen favored by students and night owls. Finishing optional.", hours: "11am–3am", price: "¥", cat: "Ramen" },
+      { name: "Izakaya Hana Koenji", desc: "Ancient wooden izakaya pouring cold Sapporo and grilling kushiyaki since 1971. Nothing has changed.", hours: "5pm–midnight, closed Mon", price: "¥", cat: "Izakaya" }
+    ]
+  },
+
+  /* ── 17. GINZA / SHIMBASHI ──────────────────────────────────── */
+  {
+    id: "ginza", name: "Ginza / Shimbashi",
+    lat: 35.6717, lng: 139.7634,
+    color: "#B8860B", walkMin: 68,
+    isHome: false, inRange: true,
+    cats: ["food", "culture", "nightlife"],
+    vibeShort: "Old money meets salary men — Champs-Élysées by day, izakaya alleys by night",
+    vibe: "Ginza is Japan's most expensive shopping district: glass facades, designer labels, and perfectly suited shoppers. Shimbashi next door is its alter ego — a dense grid of izakayas where salary workers celebrate and commiserate in equal measure. Between Tsukiji's seafood stalls and Ginza's Michelin row, this is one of Tokyo's best food destinations.",
+    spots: [
+      { name: "Tsukiji Outer Market", desc: "Post-auction market with hundreds of seafood stalls, tamagoyaki specialists, and the freshest sushi anywhere.", hours: "5am–2pm (most stalls)", price: "¥–¥¥¥¥", cat: "Culture" },
+      { name: "Kyubey Ginza", desc: "Legendary sushi institution since 1936. The place that taught the world what omakase means.", hours: "11:30am–2pm, 5–9:30pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi" },
+      { name: "Shimbashi Izakaya Alley", desc: "Dozens of classic izakayas under and around the train tracks. Oden stew, cold draught, very loud conversation.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Ginza Six Rooftop Terrace", desc: "Rooftop bar atop Tokyo's most extravagant retail complex. The sunset city views are spectacular.", hours: "11am–10pm", price: "¥¥¥", cat: "Bar" },
+      { name: "Karaoke Shidax Shimbashi", desc: "Full karaoke complex with dozens of themed rooms and complete food and drink service until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity" }
+    ]
+  },
+
+  /* ── 18. AKIHABARA ──────────────────────────────────────────── */
+  {
+    id: "akihabara", name: "Akihabara",
+    lat: 35.6988, lng: 139.7731,
+    color: "#AD1457", walkMin: 85,
+    isHome: false, inRange: true,
+    cats: ["activity", "culture", "food"],
+    vibeShort: "Electric Town — anime, arcades, and absolute sensory overload",
+    vibe: "Akihabara blazes with neon and noise: anime figures in every window, maid cafe hostesses on every corner, multi-floor arcades pumping J-pop. It's completely unironic about its identity and all the better for it. The electronics district still thrives, and there are some genuinely great late-night ramen spots tucked in the back streets.",
+    spots: [
+      { name: "Super Potato", desc: "Five floors of retro gaming: original Famicom, arcade boards, obscure imports, and a rooftop arcade.", hours: "11am–8pm weekdays, 10am–8pm weekends", price: "Free to browse", cat: "Activity" },
+      { name: "Club Sega Akihabara No.2", desc: "Multi-floor arcade packed with latest rhythm games, crane machines, and UFO catchers.", hours: "10am–midnight", price: "¥", cat: "Activity" },
+      { name: "Darts Live Akihabara", desc: "State-of-the-art electronic dart bar with online global rankings and late-night weekend service.", hours: "2pm–2am, Fri–Sat to 4am", price: "¥¥", cat: "Activity" },
+      { name: "Ramen Raijin Akihabara", desc: "Dense, bold tonkotsu broth beloved by gamers and night owls. Open until 5am on Friday and Saturday.", hours: "11am–5am Fri–Sat, to 2am other days", price: "¥", cat: "Ramen" },
+      { name: "@Home Maid Cafe", desc: "One of Akihabara's original maid cafes since 2004 — charming, wholesome, and quintessentially Tokyo.", hours: "11:30am–10pm", price: "¥¥¥", cat: "Culture" }
+    ]
+  },
+
+  /* ── 19. KICHIJOJI ──────────────────────────────────────────── */
+  {
+    id: "kichijoji", name: "Kichijoji",
+    lat: 35.7020, lng: 139.5801,
+    color: "#2E7D32", walkMin: 95,
+    isHome: false, inRange: false,
+    cats: ["food", "activity", "music", "culture", "nightlife"],
+    vibeShort: "Tokyo's most loveable neighborhood — park, jazz bars, hidden alleys",
+    vibe: "Voted Tokyo's most desirable place to live year after year, Kichijoji has it all: Inokashira Park's serene ponds and rowboats, tiny jazz clubs that feel like another era, a chaotic alley of 30 standing bars, serious ramen, and great sushi. The 30-minute train from Meguro is absolutely worth it.",
+    spots: [
+      { name: "Inokashira Park", desc: "Beautiful park with a central pond, rowboat rentals, a small zoo, and legendary cherry blossoms in spring.", hours: "Always open (zoo 9:30am–5pm)", price: "Free (rowboats ¥700/30 min)", cat: "Activity" },
+      { name: "Jazz Spot Sometime", desc: "Intimate basement jazz club operating since 1974. Whisky, low light, impeccable live jazz every night.", hours: "6pm–1am, closed Mon", price: "¥¥ + cover", cat: "Music" },
+      { name: "Harmonica Yokocho", desc: "30+ standing bars crammed into a WWII-era alley. Each bar seats 5–8 — squeeze in and order whatever.", hours: "5pm–1am", price: "¥¥", cat: "Bar" },
+      { name: "Round 1 Kichijoji", desc: "Entertainment complex with bowling, batting cages, darts, and a full arcade. Always buzzing.", hours: "10am–5am", price: "¥¥", cat: "Activity" },
+      { name: "Sushi Taka Kichijoji", desc: "Highly regarded counter sushi with a focus on seasonal fish and excellent omakase value.", hours: "12–2pm, 5:30–10pm, closed Wed", price: "¥¥¥", cat: "Sushi" }
+    ]
+  },
+
+  /* ── 20. IKEBUKURO ──────────────────────────────────────────── */
+  {
+    id: "ikebukuro", name: "Ikebukuro",
+    lat: 35.7296, lng: 139.7109,
+    color: "#1565C0", walkMin: 105,
+    isHome: false, inRange: false,
+    cats: ["activity", "food", "nightlife", "culture"],
+    vibeShort: "West side power play — Tokyo's biggest entertainment complex and great ramen",
+    vibe: "Ikebukuro is Shinjuku's less-celebrated rival, and underrated for it. It has Tokyo's largest single entertainment complex in Round 1, an impressive concentration of ramen shops, and an otaku culture district less crowded than Akihabara. The neon west exit is pure sensory overload — an evening well spent.",
+    spots: [
+      { name: "Round 1 Stadium Ikebukuro", desc: "Tokyo's largest Round 1: 10 bowling lanes, batting cages, a full darts arena, arcade, and karaoke. 5 floors.", hours: "10am–5am daily", price: "¥¥", cat: "Activity" },
+      { name: "Sunshine City", desc: "Massive entertainment mall with an aquarium, observation deck, and a full restaurant floor.", hours: "10am–10pm", price: "Varies", cat: "Culture" },
+      { name: "Ramen Ezogiku Ikebukuro", desc: "Sapporo-style miso ramen with butter and corn — one of the best miso bowls in the city.", hours: "11am–midnight", price: "¥", cat: "Ramen" },
+      { name: "Ikebukuro Nishi-Guchi Yokocho", desc: "Izakaya alley on the west side packed with grilled skewers, cold beer, and post-work salary workers.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
+      { name: "Karaoke Pasela Ikebukuro", desc: "Upscale karaoke complex with food service, a cocktail list, and extravagant themed rooms until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity" }
+    ]
+  }
+
+];
+
+/* ════════════════════════════════════════════════════════════
+   WARD → HOOD MAP  (matches ward_en property in the GeoJSON)
+   Each ward is assigned to its most recognizable neighborhood.
+   Sub-ward neighborhoods (9 of 20) are rendered as dot markers.
+════════════════════════════════════════════════════════════ */
+const WARD_HOOD_MAP = {
+  "Meguro Ku":      "meguro",      // 目黒区
+  "Shibuya Ku":     "shibuya",     // 渋谷区  (also contains Daikanyama, Ebisu, Harajuku, Hiroo)
+  "Shinjuku Ku":    "shinjuku",    // 新宿区
+  "Setagaya Ku":    "setagaya",    // 世田谷区 (also contains Shimokitazawa, Sangenjaya)
+  "Minato Ku":      "roppongi",    // 港区     (also contains Azabu-Juban)
+  "Suginami Ku":    "koenji",      // 杉並区
+  "Toshima Ku":     "ikebukuro",   // 豊島区
+  "Chuo Ku":        "ginza",       // 中央区
+  "Chiyoda Ku":     "akihabara",   // 千代田区
+  "Shinagawa Ku":   "gotanda",     // 品川区
+  "Musashino Shi":  "kichijoji",   // 武蔵野市
+};
+
+/* ════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════ */
+let selectedId   = null;
+let activeFilter = "all";
+let wardLayers   = {};   // hoodId → L.layer  (GeoJSON polygon)
+let labelMarkers = {};   // hoodId → L.marker (centered text label)
+let dotMarkers   = {};   // hoodId → L.marker (sub-ward dot)
+let drawerOpen   = false;
+let dragStartY   = 0;
+let dragStartScrollTop = 0;
+let isDragging   = false;
+
+/* ════════════════════════════════════════════════════════════
+   MAP INIT
+════════════════════════════════════════════════════════════ */
+const map = L.map("map", {
+  center: [35.6750, 139.7100],
+  zoom: 11,
+  zoomControl: true,
+  tap: true,
+  tapTolerance: 18,
+  touchZoom: true,
+  scrollWheelZoom: true,
+  doubleClickZoom: true,
+  dragging: true,
+});
+
+map.zoomControl.setPosition("topright");
+
+L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: "abcd",
+    maxZoom: 20,
+  }
+).addTo(map);
+
+/* ════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════ */
+function isVisible(h) {
+  if (activeFilter === "all") return true;
+  return h.cats.includes(activeFilter);
+}
+
+function tagClass(cat) {
+  const m = {
+    Sushi:"t-sushi", Ramen:"t-ramen", Izakaya:"t-izakaya",
+    Bar:"t-bar", Music:"t-music", Activity:"t-activity",
+    Bowling:"t-bowling", Culture:"t-culture", Cafe:"t-cafe",
+    Shopping:"t-shopping",
+  };
+  return m[cat] || "t-default";
+}
+
+function walkLabel(h) {
+  if (h.isHome)   return "Home base ★";
+  if (!h.inRange) return `~${h.walkMin} min — take the train`;
+  return `~${h.walkMin} min walk from Meguro`;
+}
+
+function hoodById(id) { return HOODS.find(h => h.id === id); }
+
+/* ════════════════════════════════════════════════════════════
+   POLYGON STYLES
+════════════════════════════════════════════════════════════ */
+function polyStyle(hoodId) {
+  const h = hoodById(hoodId);
+  if (!h) return neutralStyle();
+  const sel    = (hoodId === selectedId);
+  const dimmed = !isVisible(h);
+  return {
+    fillColor:   h.color,
+    fillOpacity: sel ? 0.80 : dimmed ? 0.10 : 0.50,
+    color:       "#fff",
+    weight:      sel ? 3.0 : 1.5,
+    opacity:     dimmed ? 0.25 : 1,
+  };
+}
+
+function polyHoverStyle(hoodId) {
+  const h = hoodById(hoodId);
+  if (!h) return neutralStyle();
+  return {
+    fillColor:   h.color,
+    fillOpacity: 0.70,
+    color:       "#fff",
+    weight:      2.5,
+    opacity:     1,
+  };
+}
+
+function neutralStyle() {
+  return {
+    fillColor:   "#ccc9c0",
+    fillOpacity: 0.22,
+    color:       "rgba(255,255,255,0.6)",
+    weight:      1,
+    opacity:     0.5,
+  };
+}
+
+/* ════════════════════════════════════════════════════════════
+   DETAIL HTML
+════════════════════════════════════════════════════════════ */
+function detailHTML(h) {
+  const metaBadge = h.isHome
+    ? `<span class="nd-home-badge">★ Home base</span>`
+    : h.inRange
+      ? `<span class="nd-walk">🚶 ${walkLabel(h)}</span>`
+      : `<span class="nd-walk">🚶 ${walkLabel(h)}</span>
+         <span class="nd-train-badge">🚃 Take the train</span>`;
+
+  const spots = h.spots.map(s => `
+    <div class="spot">
+      <div class="spot-top">
+        <div class="spot-name">${s.name}</div>
+        <div class="spot-tag ${tagClass(s.cat)}">${s.cat}</div>
+      </div>
+      <div class="spot-desc">${s.desc}</div>
+      <div class="spot-meta">
+        <span>🕐 ${s.hours}</span>
+        <span>💴 ${s.price}</span>
+      </div>
+    </div>`).join("");
+
+  return `
+    <div class="nd-header">
+      <div class="nd-dot" style="background:${h.color}"></div>
+      <div>
+        <div class="nd-name">${h.name}</div>
+        <div class="nd-meta">${metaBadge}</div>
+      </div>
+    </div>
+    <div class="nd-vibe">${h.vibe}</div>
+    <div class="nd-spots-label">Top Spots &amp; Recommendations</div>
+    ${spots}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   UPDATE STYLES  (called after filter or selection change)
+════════════════════════════════════════════════════════════ */
+function updateStyles() {
+  // Re-style all ward polygons
+  Object.entries(wardLayers).forEach(([hoodId, layer]) => {
+    layer.setStyle(polyStyle(hoodId));
+    if (hoodId === selectedId) layer.bringToFront();
+  });
+
+  // Update label opacity to follow filter dimming
+  Object.entries(labelMarkers).forEach(([hoodId, marker]) => {
+    const h = hoodById(hoodId);
+    if (!h) return;
+    const el = marker.getElement();
+    if (el) el.style.opacity = isVisible(h) ? "1" : "0.2";
+  });
+
+  // Recreate sub-ward dots (simplest way to sync color/size/dim state)
+  Object.values(dotMarkers).forEach(m => map.removeLayer(m));
+  dotMarkers = {};
+  HOODS.forEach(h => {
+    if (!wardLayers[h.id]) createDot(h);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════
+   DOT MARKERS  (sub-ward neighborhoods without a ward polygon)
+════════════════════════════════════════════════════════════ */
+function dotTooltipHTML(h) {
+  const trainLine = !h.inRange
+    ? `<div class="tip-train">🚃 Train recommended</div>` : "";
+  return `<div class="tip-name">${h.isHome ? "★ " : ""}${h.name}</div>
+          <div class="tip-walk">${walkLabel(h)}</div>
+          <div class="tip-vibe">${h.vibeShort}</div>${trainLine}`;
+}
+
+function createDot(h) {
+  const sel    = (h.id === selectedId);
+  const vis    = isVisible(h);
+  const dimCls = (!vis && !h.isHome) ? " dot-dim" : "";
+  const selCls = sel ? " dot-sel" : "";
+  const trainEl = !h.inRange ? `<div class="dot-train">🚃 train</div>` : "";
+  const homePrefix = h.isHome ? "★ " : "";
+
+  const html = `<div class="dot-wrap">
+    <div class="dot-circ${dimCls}${selCls}" style="background:${h.color};"></div>
+    <div class="dot-name${dimCls}">${homePrefix}${h.name}</div>
+    ${trainEl}
+  </div>`;
+
+  const marker = L.marker([h.lat, h.lng], {
+    icon: L.divIcon({
+      html,
+      className:  "",
+      iconSize:   [100, 52],
+      iconAnchor: [50, 13],
+    }),
+    zIndexOffset: sel ? 1000 : vis ? 300 : 100,
+  });
+
+  marker.bindTooltip(dotTooltipHTML(h), {
+    className: "mk-tip", direction: "top", offset: [0, -8], sticky: false,
+  });
+
+  marker.on("click", e => {
+    L.DomEvent.stopPropagation(e);
+    selectHood(h);
+  });
+
+  marker.addTo(map);
+  dotMarkers[h.id] = marker;
+}
+
+/* ════════════════════════════════════════════════════════════
+   LOAD GEOJSON
+════════════════════════════════════════════════════════════ */
+async function loadGeoJSON() {
+  const loadEl = document.getElementById("map-loading");
+
+  try {
+    const res  = await fetch(
+      "https://raw.githubusercontent.com/dataofjapan/land/master/tokyo.geojson"
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // ── Render ward polygons ──────────────────────────────────────
+    const geoLayer = L.geoJSON(data, {
+      style: feature => {
+        const wardEn = feature.properties.ward_en || "";
+        const hoodId = WARD_HOOD_MAP[wardEn];
+        return hoodId ? polyStyle(hoodId) : neutralStyle();
+      },
+
+      onEachFeature: (feature, layer) => {
+        const wardEn = feature.properties.ward_en || "";
+        const hoodId = WARD_HOOD_MAP[wardEn];
+        if (!hoodId) return;
+
+        const h = hoodById(hoodId);
+        wardLayers[hoodId] = layer;
+
+        layer.bindTooltip(dotTooltipHTML(h), {
+          className: "mk-tip", sticky: true, offset: [0, 0],
+        });
+
+        layer.on("click", e => {
+          L.DomEvent.stopPropagation(e);
+          selectHood(h);
+        });
+
+        layer.on("mouseover", () => {
+          if (hoodId !== selectedId) layer.setStyle(polyHoverStyle(hoodId));
+        });
+        layer.on("mouseout", () => {
+          if (hoodId !== selectedId) layer.setStyle(polyStyle(hoodId));
+        });
+      },
+    }).addTo(map);
+
+    // ── Place centered text labels on each ward polygon ───────────
+    HOODS.forEach(h => {
+      const layer = wardLayers[h.id];
+      if (!layer) return;
+
+      const center = layer.getBounds().getCenter();
+      const homePrefix = h.isHome ? "★ " : "";
+      const trainBadge = !h.inRange
+        ? ` <span class="pl-train">train</span>` : "";
+
+      const labelMarker = L.marker(center, {
+        icon: L.divIcon({
+          html: `<div class="poly-label-wrap">
+                   <div class="poly-label">
+                     ${homePrefix}${h.name}${trainBadge}
+                   </div>
+                 </div>`,
+          className:  "",
+          iconSize:   [140, 28],
+          iconAnchor: [70, 14],
+        }),
+        interactive: false,
+        zIndexOffset: 200,
+      }).addTo(map);
+
+      labelMarkers[h.id] = labelMarker;
+    });
+
+    // ── Create sub-ward dot markers (9 neighborhoods) ─────────────
+    HOODS.forEach(h => {
+      if (!wardLayers[h.id]) createDot(h);
+    });
+
+    // Hide loading spinner
+    if (loadEl) loadEl.style.display = "none";
+
+  } catch (err) {
+    console.error("GeoJSON load failed:", err);
+    if (loadEl) {
+      loadEl.innerHTML =
+        `<div class="load-error">
+           ⚠️ Could not load map boundaries.<br>
+           <small>Check your internet connection and reload.</small>
+         </div>`;
+    }
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SELECT NEIGHBORHOOD
+════════════════════════════════════════════════════════════ */
+function selectHood(h) {
+  selectedId = h.id;
+  updateStyles();
+
+  const html = detailHTML(h);
+  document.getElementById("drawer-detail").innerHTML  = html;
+  document.getElementById("sidebar-detail").innerHTML = html;
+  document.getElementById("sidebar-detail").style.display = "block";
+  document.getElementById("sidebar-empty").style.display  = "none";
+
+  openDrawer();
+
+  // Pan to neighborhood — on mobile offset slightly up so polygon isn't hidden behind drawer
+  const mobile = window.innerWidth < 768;
+  if (mobile) {
+    const pt  = map.latLngToContainerPoint([h.lat, h.lng]);
+    const adj = map.containerPointToLatLng(
+      L.point(pt.x, pt.y + map.getContainer().clientHeight * 0.14)
+    );
+    map.panTo(adj, { animate: true, duration: 0.45 });
+  } else {
+    map.panTo([h.lat, h.lng], { animate: true, duration: 0.45 });
+  }
+}
+
+function deselect() {
+  selectedId = null;
+  updateStyles();
+  closeDrawer();
+  document.getElementById("sidebar-detail").style.display = "none";
+  document.getElementById("sidebar-empty").style.display  = "block";
+}
+
+/* ════════════════════════════════════════════════════════════
+   DRAWER
+════════════════════════════════════════════════════════════ */
+const drawer  = document.getElementById("drawer");
+const overlay = document.getElementById("overlay");
+
+function openDrawer() {
+  drawer.classList.add("open");
+  overlay.classList.add("on");
+  drawerOpen = true;
+}
+
+function closeDrawer() {
+  drawer.classList.remove("open");
+  overlay.classList.remove("on");
+  drawerOpen = false;
+}
+
+const dragArea    = document.getElementById("drawer-drag");
+const drawerScroll = document.getElementById("drawer-scroll");
+
+dragArea.addEventListener("click", () => { if (drawerOpen) deselect(); });
+
+dragArea.addEventListener("touchstart", e => {
+  isDragging = true;
+  dragStartY = e.touches[0].clientY;
+}, { passive: true });
+
+drawer.addEventListener("touchmove", e => {
+  if (!isDragging) return;
+  const delta = e.touches[0].clientY - dragStartY;
+  if (delta > 0) {
+    drawer.style.transform = `translateY(${delta}px)`;
+    drawer.style.transition = "none";
+  }
+}, { passive: true });
+
+drawer.addEventListener("touchend", e => {
+  if (!isDragging) return;
+  isDragging = false;
+  const delta = e.changedTouches[0].clientY - dragStartY;
+  drawer.style.transform = "";
+  drawer.style.transition = "";
+  if (delta > 80) deselect();
+}, { passive: true });
+
+drawerScroll.addEventListener("touchstart", e => {
+  dragStartScrollTop = drawerScroll.scrollTop;
+  dragStartY = e.touches[0].clientY;
+}, { passive: true });
+
+drawerScroll.addEventListener("touchmove", e => {
+  const atTop  = drawerScroll.scrollTop <= 0;
+  const delta  = e.touches[0].clientY - dragStartY;
+  if (atTop && delta > 0) {
+    isDragging = true;
+    drawer.style.transform = `translateY(${delta}px)`;
+    drawer.style.transition = "none";
+  }
+}, { passive: true });
+
+drawerScroll.addEventListener("touchend", e => {
+  if (!isDragging) return;
+  isDragging = false;
+  const delta = e.changedTouches[0].clientY - dragStartY;
+  drawer.style.transform = "";
+  drawer.style.transition = "";
+  if (delta > 80) deselect();
+}, { passive: true });
+
+overlay.addEventListener("click", deselect);
+
+/* ════════════════════════════════════════════════════════════
+   FILTER CHIPS
+════════════════════════════════════════════════════════════ */
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    activeFilter = chip.dataset.f;
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    // Deselect if the active hood no longer matches the new filter
+    if (selectedId) {
+      const h = hoodById(selectedId);
+      if (h && !isVisible(h) && !h.isHome) deselect();
+      else updateStyles();
+    } else {
+      updateStyles();
+    }
+  });
+});
+
+/* ════════════════════════════════════════════════════════════
+   LEGEND
+════════════════════════════════════════════════════════════ */
+const legendEl  = document.getElementById("legend");
+const legendBtn = document.getElementById("legend-btn");
+
+legendBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  legendEl.classList.toggle("on");
+});
+
+document.addEventListener("click", e => {
+  if (!legendEl.contains(e.target) && e.target !== legendBtn)
+    legendEl.classList.remove("on");
+});
+
+/* ════════════════════════════════════════════════════════════
+   MAP CLICK → deselect (only fires when no polygon/dot stops it)
+════════════════════════════════════════════════════════════ */
+map.on("click", deselect);
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════ */
+loadGeoJSON();
+</script>
+</body>
+</html>
