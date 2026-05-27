@@ -510,6 +510,84 @@
       line-height: 1.4;
     }
 
+    /* ── User location dot ─────────────────────────────────────── */
+    .user-loc-wrap {
+      position: relative;
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-dot-ring {
+      position: absolute;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(41,121,255,0.22);
+      animation: user-pulse 2s ease-out infinite;
+    }
+    .user-dot-core {
+      position: relative;
+      width: 14px; height: 14px;
+      background: #2979ff;
+      border: 2.5px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 10px rgba(41,121,255,0.55);
+      z-index: 1;
+    }
+    @keyframes user-pulse {
+      0%   { transform: scale(0.7); opacity: 0.9; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    /* ── Locate button (Leaflet control) ───────────────────────── */
+    .locate-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      height: 36px;
+      background: #fff;
+      border: 1.5px solid #d8d8d4;
+      border-radius: 10px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+      margin-bottom: 10px;
+    }
+    .locate-btn:hover:not(:disabled) { background: #f5f5f0; border-color: #bbb; }
+    .locate-btn.active {
+      background: #EEF4FF;
+      border-color: #2979ff;
+      color: #1a5fd4;
+    }
+    .locate-btn:disabled { opacity: 0.65; cursor: default; }
+
+    /* ── Location toast ────────────────────────────────────────── */
+    #loc-toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: rgba(26,26,26,0.92);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 9999;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #loc-toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ── Bottom drawer (mobile) ─────────────────────────────────── */
     #drawer {
       position: fixed;
@@ -788,6 +866,9 @@
 
 <!-- Overlay -->
 <div id="overlay"></div>
+
+<!-- Location toast -->
+<div id="loc-toast"></div>
 
 <!-- Bottom drawer (mobile) -->
 <div id="drawer">
@@ -1315,6 +1396,10 @@ let dragStartScrollTop = 0;
 let isDragging   = false;
 let spotPin      = null; // active spot pin marker
 let spotHood     = null; // neighborhood to return to on back
+let spotIdx      = null; // index of selected spot within hood.spots
+let userLocation = null; // {lat, lng} from GPS
+let userDot      = null; // Leaflet marker for pulsing blue dot
+let locateBtn    = null; // button element in the Leaflet locate control
 
 /* ════════════════════════════════════════════════════════════
    MAP INIT
@@ -1362,12 +1447,27 @@ function tagClass(cat) {
 }
 
 function walkLabel(h) {
+  if (userLocation) {
+    const dist = haversine(userLocation.lat, userLocation.lng, h.lat, h.lng);
+    const mins = Math.min(Math.round(dist / 80), 999);
+    if (h.isHome) return `~${mins} min walk (your hotel)`;
+    return mins > 90 ? `~${mins} min — take the train` : `~${mins} min walk from you`;
+  }
   if (h.isHome)   return "Home base ★";
   if (!h.inRange) return `~${h.walkMin} min — take the train`;
   return `~${h.walkMin} min walk from Meguro`;
 }
 
 function hoodById(id) { return HOODS.find(h => h.id === id); }
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R  = 6371000;
+  const p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
+  const dp = (lat2 - lat1) * Math.PI / 180;
+  const dl = (lng2 - lng1) * Math.PI / 180;
+  const a  = Math.sin(dp/2)**2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 /* ════════════════════════════════════════════════════════════
    POLYGON STYLES
@@ -1412,12 +1512,19 @@ function neutralStyle() {
    DETAIL HTML
 ════════════════════════════════════════════════════════════ */
 function detailHTML(h) {
-  const metaBadge = h.isHome
-    ? `<span class="nd-home-badge">★ Home base</span>`
-    : h.inRange
-      ? `<span class="nd-walk">🚶 ${walkLabel(h)}</span>`
-      : `<span class="nd-walk">🚶 ${walkLabel(h)}</span>
-         <span class="nd-train-badge">🚃 Take the train</span>`;
+  let metaBadge;
+  if (!userLocation && h.isHome) {
+    metaBadge = `<span class="nd-home-badge">★ Home base</span>`;
+  } else {
+    const dist     = userLocation ? haversine(userLocation.lat, userLocation.lng, h.lat, h.lng) : null;
+    const mins     = dist !== null ? Math.min(Math.round(dist / 80), 999) : h.walkMin;
+    const isTrain  = dist !== null ? mins > 90 : !h.inRange;
+    const homePart = (userLocation && h.isHome) ? ` <span class="nd-home-badge">★ Hotel</span>` : "";
+    metaBadge = isTrain
+      ? `<span class="nd-walk">🚶 ${walkLabel(h)}</span>
+         <span class="nd-train-badge">🚃 Take the train</span>${homePart}`
+      : `<span class="nd-walk">🚶 ${walkLabel(h)}</span>${homePart}`;
+  }
 
   const spots = h.spots.map((s, i) => `
     <div class="spot" data-hood-id="${h.id}" data-spot-idx="${i}">
@@ -1464,6 +1571,7 @@ function clearSpotPin() {
   if (!spotPin) return;
   const pin = spotPin;
   spotPin = null;
+  spotIdx = null;
   pin.off("popupclose");
   map.removeLayer(pin);
 
@@ -1480,6 +1588,7 @@ function clearSpotPin() {
 function selectSpot(spot, hood) {
   clearSpotPin();
   spotHood = hood;
+  spotIdx  = hood.spots.indexOf(spot);
 
   // Highlight the card in both drawer and sidebar
   document.querySelectorAll(`.spot[data-hood-id="${hood.id}"][data-spot-idx]`).forEach(el => {
@@ -1846,6 +1955,132 @@ document.addEventListener("click", e => {
    MAP CLICK → deselect (only fires when no polygon/dot stops it)
 ════════════════════════════════════════════════════════════ */
 map.on("click", deselect);
+
+/* ════════════════════════════════════════════════════════════
+   USER LOCATION  ("I'm Here" button)
+════════════════════════════════════════════════════════════ */
+function placeUserDot(lat, lng) {
+  if (userDot) map.removeLayer(userDot);
+  userDot = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html: `<div class="user-loc-wrap">
+               <div class="user-dot-ring"></div>
+               <div class="user-dot-core"></div>
+             </div>`,
+      className:  "",
+      iconSize:   [28, 28],
+      iconAnchor: [14, 14],
+    }),
+    zIndexOffset: 9000,
+    interactive:  false,
+  }).addTo(map);
+}
+
+function clearUserLoc() {
+  userLocation = null;
+  if (userDot) { map.removeLayer(userDot); userDot = null; }
+  setLocateBtnState("idle");
+  updateStyles();
+  updateAllTooltips();
+  refreshDetailIfOpen();
+}
+
+function refreshDetailIfOpen() {
+  if (!selectedId) return;
+  const h = hoodById(selectedId);
+  if (!h) return;
+  const html = detailHTML(h);
+  document.getElementById("drawer-detail").innerHTML  = html;
+  document.getElementById("sidebar-detail").innerHTML = html;
+  // Restore spot-selection state if a spot pin is still active
+  if (spotPin && spotIdx !== null) {
+    document.querySelectorAll(
+      `.spot[data-hood-id="${h.id}"][data-spot-idx="${spotIdx}"]`
+    ).forEach(el => el.classList.add("spot-selected"));
+    document.querySelectorAll(".spot-back-wrap").forEach(el => el.style.display = "block");
+  }
+}
+
+function updateAllTooltips() {
+  Object.entries(wardLayers).forEach(([hoodId, layer]) => {
+    const h = hoodById(hoodId);
+    if (h) layer.setTooltipContent(dotTooltipHTML(h));
+  });
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("loc-toast");
+  toast.textContent = msg;
+  toast.classList.add("on");
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove("on"), 3500);
+}
+
+function setLocateBtnState(state) {
+  if (!locateBtn) return;
+  locateBtn.classList.remove("active");
+  locateBtn.disabled = false;
+  if (state === "loading") {
+    locateBtn.innerHTML = "⟳ Locating…";
+    locateBtn.disabled  = true;
+  } else if (state === "active") {
+    locateBtn.innerHTML = "📍 Located";
+    locateBtn.classList.add("active");
+  } else {
+    locateBtn.innerHTML = "📍 I'm Here";
+  }
+}
+
+function onGPSSuccess(pos) {
+  userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  placeUserDot(userLocation.lat, userLocation.lng);
+  setLocateBtnState("active");
+  updateStyles();
+  updateAllTooltips();
+  refreshDetailIfOpen();
+  showToast("📍 Location found — walk times updated");
+}
+
+function onGPSError(err) {
+  setLocateBtnState("idle");
+  const msgs = {
+    1: "Location access denied — check your browser settings",
+    2: "Location unavailable",
+    3: "Location request timed out",
+  };
+  showToast(msgs[err.code] || "Could not determine your location");
+}
+
+function startLocate() {
+  if (!navigator.geolocation) {
+    showToast("Geolocation not supported on this device");
+    return;
+  }
+  setLocateBtnState("loading");
+  navigator.geolocation.getCurrentPosition(onGPSSuccess, onGPSError, {
+    enableHighAccuracy: true,
+    timeout:            10000,
+    maximumAge:         60000,
+  });
+}
+
+function toggleLocate() {
+  if (userLocation) clearUserLoc(); else startLocate();
+}
+
+const LocateControl = L.Control.extend({
+  options: { position: "bottomright" },
+  onAdd() {
+    const btn = L.DomUtil.create("button", "locate-btn");
+    btn.innerHTML = "📍 I'm Here";
+    btn.title     = "Show my location and update walk times";
+    L.DomEvent.disableClickPropagation(btn);
+    L.DomEvent.on(btn, "click", toggleLocate);
+    locateBtn = btn;
+    return btn;
+  },
+});
+new LocateControl().addTo(map);
 
 /* ════════════════════════════════════════════════════════════
    INIT
