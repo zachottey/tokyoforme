@@ -798,6 +798,48 @@
     .dot-name.dot-dim { opacity: 0.35; }
     .dot-train { font-size: 8px; margin-top: 1px; opacity: 0.65; }
 
+    /* ── Geo debug panel ───────────────────────────────────────── */
+    #geo-debug {
+      position: fixed;
+      bottom: 80px;
+      left: 12px;
+      background: rgba(0,0,0,0.88);
+      color: #b8ffb8;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      border-radius: 10px;
+      z-index: 9999;
+      max-width: 300px;
+      min-width: 230px;
+      box-shadow: 0 4px 22px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    #geo-debug-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 12px;
+      background: rgba(0,0,0,0.5);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #7fffd4;
+      letter-spacing: 0.3px;
+    }
+    #geo-debug-close {
+      background: none; border: none;
+      color: #7fffd4; font-size: 15px;
+      cursor: pointer; padding: 0 2px; line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #geo-debug-body {
+      padding: 10px 12px 12px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
     /* ── Desktop layout (768px+) ────────────────────────────────── */
     @media (min-width: 768px) {
       #drawer, #overlay { display: none !important; }
@@ -869,6 +911,15 @@
 
 <!-- Location toast -->
 <div id="loc-toast"></div>
+
+<!-- Geo debug panel (remove once location is confirmed working) -->
+<div id="geo-debug">
+  <div id="geo-debug-header">
+    <span>📡 Geo Debug</span>
+    <button id="geo-debug-close" aria-label="Close debug panel">✕</button>
+  </div>
+  <div id="geo-debug-body">Press "I'm Here" to start…</div>
+</div>
 
 <!-- Bottom drawer (mobile) -->
 <div id="drawer">
@@ -2031,8 +2082,26 @@ function setLocateBtnState(state) {
   }
 }
 
+function updateGeoDebug(html) {
+  const el = document.getElementById("geo-debug-body");
+  if (el) el.innerHTML = html;
+}
+
 function onGPSSuccess(pos) {
-  userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  const c = pos.coords;
+  const ts = new Date(pos.timestamp).toISOString();
+  updateGeoDebug(
+    `<span style="color:#7fffd4;font-weight:700">✓ SUCCESS</span>\n` +
+    `lat:      ${c.latitude.toFixed(7)}\n` +
+    `lng:      ${c.longitude.toFixed(7)}\n` +
+    `accuracy: ${c.accuracy != null ? c.accuracy.toFixed(1) + ' m' : 'n/a'}\n` +
+    `altitude: ${c.altitude != null ? c.altitude.toFixed(1) + ' m' : 'n/a'}\n` +
+    `altAcc:   ${c.altitudeAccuracy != null ? c.altitudeAccuracy.toFixed(1) + ' m' : 'n/a'}\n` +
+    `heading:  ${c.heading != null ? c.heading.toFixed(1) + '°' : 'n/a'}\n` +
+    `speed:    ${c.speed != null ? c.speed.toFixed(2) + ' m/s' : 'n/a'}\n` +
+    `time:     ${ts}`
+  );
+  userLocation = { lat: c.latitude, lng: c.longitude };
   placeUserDot(userLocation.lat, userLocation.lng);
   setLocateBtnState("active");
   updateStyles();
@@ -2042,6 +2111,12 @@ function onGPSSuccess(pos) {
 }
 
 function onGPSError(err) {
+  const errNames = { 1: "PERMISSION_DENIED", 2: "POSITION_UNAVAILABLE", 3: "TIMEOUT" };
+  updateGeoDebug(
+    `<span style="color:#ff8080;font-weight:700">✗ ERROR</span>\n` +
+    `code:    ${err.code} — ${errNames[err.code] || "UNKNOWN"}\n` +
+    `message: ${err.message || "(none)"}`
+  );
   setLocateBtnState("idle");
   const msgs = {
     1: "Location access denied — check your browser settings",
@@ -2053,9 +2128,16 @@ function onGPSError(err) {
 
 function startLocate() {
   if (!navigator.geolocation) {
+    updateGeoDebug('<span style="color:#ff8080;font-weight:700">✗ ERROR</span>\nGeolocation API not supported\non this browser/device.');
     showToast("Geolocation not supported on this device");
     return;
   }
+  updateGeoDebug(
+    `<span style="color:#ffd080;font-weight:700">⏳ REQUESTING…</span>\n` +
+    `enableHighAccuracy: true\n` +
+    `timeout:            10 000 ms\n` +
+    `maximumAge:         60 000 ms`
+  );
   setLocateBtnState("loading");
   navigator.geolocation.getCurrentPosition(onGPSSuccess, onGPSError, {
     enableHighAccuracy: true,
@@ -2081,6 +2163,11 @@ const LocateControl = L.Control.extend({
   },
 });
 new LocateControl().addTo(map);
+
+document.getElementById("geo-debug-close").addEventListener("click", () => {
+  const panel = document.getElementById("geo-debug");
+  if (panel) panel.style.display = "none";
+});
 
 /* ════════════════════════════════════════════════════════════
    INIT
