@@ -418,6 +418,98 @@
     .t-shopping { background: #FFFDE7; color: #F57F17; }
     .t-default  { background: #ECEFF1; color: #37474F; }
 
+    /* ── Spot card interactivity ────────────────────────────────── */
+    .spot {
+      cursor: pointer;
+      transition: background 0.14s, transform 0.1s, box-shadow 0.14s;
+    }
+    .spot:hover { background: #f0f0ec; border-color: #e0e0da; }
+    .spot:active { transform: scale(0.985); }
+    .spot.spot-selected {
+      background: #eeecea;
+      border-color: #d0d0ca;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    /* ── Spot address ───────────────────────────────────────────── */
+    .spot-address {
+      font-size: 11px;
+      color: #b8b8b2;
+      margin-top: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 3px;
+      line-height: 1.4;
+    }
+
+    /* ── Back to neighborhood button ────────────────────────────── */
+    .spot-back-wrap { margin-bottom: 16px; }
+    .spot-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f4f0;
+      border: 1.5px solid #e0e0da;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      cursor: pointer;
+      transition: background 0.14s, border-color 0.14s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .spot-back-btn:hover { background: #eceae6; border-color: #c8c8c2; }
+    .spot-back-btn:active { transform: scale(0.97); }
+
+    /* ── Spot pin drop ──────────────────────────────────────────── */
+    .spot-pin-dot {
+      width: 22px; height: 22px;
+      background: #E8583B;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.38), 0 1px 4px rgba(0,0,0,0.2);
+      animation: spot-pin-pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes spot-pin-pop {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── Spot pin popup ─────────────────────────────────────────── */
+    .spot-pin-popup .leaflet-popup-content-wrapper {
+      border-radius: 12px;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1);
+      padding: 0;
+      border: none;
+    }
+    .spot-pin-popup .leaflet-popup-content {
+      margin: 11px 15px 11px;
+      font-family: 'Inter', sans-serif;
+      min-width: 170px;
+      max-width: 240px;
+    }
+    .spot-pin-popup .leaflet-popup-close-button {
+      color: #999 !important;
+      font-size: 18px !important;
+      top: 6px !important;
+      right: 9px !important;
+    }
+    .spot-popup-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 3px;
+      padding-right: 16px;
+    }
+    .spot-popup-addr {
+      font-size: 11.5px;
+      color: #888;
+      line-height: 1.4;
+    }
+
     /* ── Bottom drawer (mobile) ─────────────────────────────────── */
     #drawer {
       position: fixed;
@@ -738,11 +830,16 @@ const HOODS = [
     vibeShort: "Your home base — residential calm meets a buzzing food scene",
     vibe: "Meguro balances quiet, tree-lined residential streets with an excellent food and bar scene. The scenic Meguro River draws crowds for hanami in spring, while the backstreets hide independent izakayas, specialty coffee, and boutiques. A deeply liveable, unhurried neighborhood — the perfect launching pad for bigger adventures.",
     spots: [
-      { name: "Meguro Parasitological Museum", desc: "The world's only parasite museum — free, bizarre, and genuinely fascinating. Don't miss the 8.8-metre tapeworm.", hours: "10am–5pm, closed Mon & Tue", price: "Free", cat: "Culture" },
-      { name: "Kohmen Ramen", desc: "Rich tonkotsu broth with perfectly springy noodles. Counter seating, no frills, total focus.", hours: "11am–11pm, closed Sun", price: "¥", cat: "Ramen" },
-      { name: "Tavern on Fifth", desc: "Laid-back sports bar with dart boards, pool table, and ice-cold Sapporo on tap.", hours: "5pm–2am", price: "¥¥", cat: "Activity" },
-      { name: "Meguro Gajoen", desc: "Spectacular hotel complex with ornate Meiji-era interiors — free to explore the lobby and corridor galleries.", hours: "10am–9pm", price: "Free", cat: "Culture" },
-      { name: "Sushi Nakamura Meguro", desc: "Intimate counter sushi with seasonal omakase in a quiet Meguro backstreet. Book at least a week ahead.", hours: "12–2pm, 6–10pm, closed Sun", price: "¥¥¥¥", cat: "Sushi" }
+      { name: "Meguro Parasitological Museum", desc: "The world's only parasite museum — free, bizarre, and genuinely fascinating. Don't miss the 8.8-metre tapeworm.", hours: "10am–5pm, closed Mon & Tue", price: "Free", cat: "Culture",
+        lat: 35.6355, lng: 139.7245, address: "4-1-1 Shirokanedai, Minato-ku, Tokyo" },
+      { name: "Kohmen Ramen", desc: "Rich tonkotsu broth with perfectly springy noodles. Counter seating, no frills, total focus.", hours: "11am–11pm, closed Sun", price: "¥", cat: "Ramen",
+        lat: 35.6335, lng: 139.7138, address: "2-3-5 Meguro, Meguro-ku, Tokyo" },
+      { name: "Tavern on Fifth", desc: "Laid-back sports bar with dart boards, pool table, and ice-cold Sapporo on tap.", hours: "5pm–2am", price: "¥¥", cat: "Activity",
+        lat: 35.6370, lng: 139.7155, address: "1-15-8 Kamimeguro, Meguro-ku, Tokyo" },
+      { name: "Meguro Gajoen", desc: "Spectacular hotel complex with ornate Meiji-era interiors — free to explore the lobby and corridor galleries.", hours: "10am–9pm", price: "Free", cat: "Culture",
+        lat: 35.6317, lng: 139.7046, address: "1-8-1 Shimomeguro, Meguro-ku, Tokyo" },
+      { name: "Sushi Nakamura Meguro", desc: "Intimate counter sushi with seasonal omakase in a quiet Meguro backstreet. Book at least a week ahead.", hours: "12–2pm, 6–10pm, closed Sun", price: "¥¥¥¥", cat: "Sushi",
+        lat: 35.6322, lng: 139.7148, address: "2-10-3 Meguro, Meguro-ku, Tokyo" }
     ]
   },
 
@@ -756,11 +853,16 @@ const HOODS = [
     vibeShort: "Canal-side cool — boutiques, third-wave coffee, late-night bars",
     vibe: "Tokyo's most photogenic neighborhood lines the Meguro River with cherry trees, concept stores, and the city's best bars. By day it's specialty coffee roasters and indie fashion; by night the canal lanes fill with the city's coolest crowd. Almost entirely locals and expats — zero tourist traps.",
     spots: [
-      { name: "Onibus Coffee", desc: "Iconic third-wave roaster in a converted garage. Standing-room only, exceptional single-origin espresso.", hours: "9am–6pm", price: "¥", cat: "Cafe" },
-      { name: "Tramp Darts Bar", desc: "High-quality dart boards, strong cocktails, and a reliably good crowd. Great for a couple's evening.", hours: "5pm–3am", price: "¥¥", cat: "Activity" },
-      { name: "Nakameguro Taproom", desc: "Baird Beer's flagship tap room overlooking the river — a dozen rotating drafts from Japan's best craft brewery.", hours: "5pm–midnight", price: "¥¥", cat: "Bar" },
-      { name: "Liquidroom", desc: "Mid-size live venue beloved by Tokyo's indie, electronic, and rock scenes. One of the city's top music rooms.", hours: "Doors vary by show", price: "¥¥–¥¥¥", cat: "Music" },
-      { name: "Sushi Saito Nakameguro", desc: "Counter-only omakase with seasonal fish sourced from Tsukiji each morning. Book 2 weeks ahead.", hours: "6pm–11pm, closed Sun & Mon", price: "¥¥¥¥", cat: "Sushi" }
+      { name: "Onibus Coffee", desc: "Iconic third-wave roaster in a converted garage. Standing-room only, exceptional single-origin espresso.", hours: "9am–6pm", price: "¥", cat: "Cafe",
+        lat: 35.6468, lng: 139.7001, address: "2-14-1 Kamimeguro, Meguro-ku, Tokyo" },
+      { name: "Tramp Darts Bar", desc: "High-quality dart boards, strong cocktails, and a reliably good crowd. Great for a couple's evening.", hours: "5pm–3am", price: "¥¥", cat: "Activity",
+        lat: 35.6453, lng: 139.6998, address: "3-4-8 Kamimeguro, Meguro-ku, Tokyo" },
+      { name: "Nakameguro Taproom", desc: "Baird Beer's flagship tap room overlooking the river — a dozen rotating drafts from Japan's best craft brewery.", hours: "5pm–midnight", price: "¥¥", cat: "Bar",
+        lat: 35.6456, lng: 139.6985, address: "2-1-3 Nakameguro, Meguro-ku, Tokyo" },
+      { name: "Liquidroom", desc: "Mid-size live venue beloved by Tokyo's indie, electronic, and rock scenes. One of the city's top music rooms.", hours: "Doors vary by show", price: "¥¥–¥¥¥", cat: "Music",
+        lat: 35.6487, lng: 139.7014, address: "3-16-6 Higashiyama, Meguro-ku, Tokyo" },
+      { name: "Sushi Saito Nakameguro", desc: "Counter-only omakase with seasonal fish sourced from Tsukiji each morning. Book 2 weeks ahead.", hours: "6pm–11pm, closed Sun & Mon", price: "¥¥¥¥", cat: "Sushi",
+        lat: 35.6462, lng: 139.6995, address: "1-5-8 Kamimeguro, Meguro-ku, Tokyo" }
     ]
   },
 
@@ -774,11 +876,16 @@ const HOODS = [
     vibeShort: "Tokyo's Left Bank — design, wine, and the world's best bookstore",
     vibe: "Daikanyama is where the fashion industry, architects, and creative directors live and play. The streets are immaculate, the coffee is serious, and the wine lists are excellent. Tsutaya Books — a design-forward bookstore open until 2am — is reason alone to visit. Quieter and more refined than neighboring Nakameguro.",
     spots: [
-      { name: "Tsutaya Books T-Site", desc: "Stunning lifestyle bookstore in a bamboo-grid building. Browse books, music, and film until 2am with great coffee.", hours: "7am–2am", price: "Free to browse", cat: "Culture" },
-      { name: "Ivy Place", desc: "Elegant bar-restaurant in a garden terrace setting. Perfect for a long evening with cocktails and wood-fired food.", hours: "11am–midnight", price: "¥¥¥", cat: "Bar" },
-      { name: "Sign", desc: "Low-key music bar beloved by Daikanyama's creative crowd. Great vinyl selection, solid cocktails, no attitude.", hours: "7pm–2am", price: "¥¥", cat: "Bar" },
-      { name: "Daichi Sushi Daikanyama", desc: "Relaxed counter sushi with a neighborhood regulars vibe and excellent value seasonal fish.", hours: "12–2pm, 5:30–10pm, closed Mon", price: "¥¥¥", cat: "Sushi" },
-      { name: "Frames Daikanyama", desc: "Pool-table bar with craft cocktails, sports on screen, and a loyal local crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity" }
+      { name: "Tsutaya Books T-Site", desc: "Stunning lifestyle bookstore in a bamboo-grid building. Browse books, music, and film until 2am with great coffee.", hours: "7am–2am", price: "Free to browse", cat: "Culture",
+        lat: 35.6490, lng: 139.7030, address: "17-5 Sarugakucho, Shibuya-ku, Tokyo" },
+      { name: "Ivy Place", desc: "Elegant bar-restaurant in a garden terrace setting. Perfect for a long evening with cocktails and wood-fired food.", hours: "11am–midnight", price: "¥¥¥", cat: "Bar",
+        lat: 35.6492, lng: 139.7028, address: "16-15 Daikanyamacho, Shibuya-ku, Tokyo" },
+      { name: "Sign", desc: "Low-key music bar beloved by Daikanyama's creative crowd. Great vinyl selection, solid cocktails, no attitude.", hours: "7pm–2am", price: "¥¥", cat: "Bar",
+        lat: 35.6498, lng: 139.7045, address: "20-14 Daikanyamacho, Shibuya-ku, Tokyo" },
+      { name: "Daichi Sushi Daikanyama", desc: "Relaxed counter sushi with a neighborhood regulars vibe and excellent value seasonal fish.", hours: "12–2pm, 5:30–10pm, closed Mon", price: "¥¥¥", cat: "Sushi",
+        lat: 35.6495, lng: 139.7038, address: "11-8 Daikanyamacho, Shibuya-ku, Tokyo" },
+      { name: "Frames Daikanyama", desc: "Pool-table bar with craft cocktails, sports on screen, and a loyal local crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity",
+        lat: 35.6480, lng: 139.7030, address: "26-1 Daikanyamacho, Shibuya-ku, Tokyo" }
     ]
   },
 
@@ -792,11 +899,16 @@ const HOODS = [
     vibeShort: "Polished and grown-up — beer history, great dining, hidden alleys",
     vibe: "Named after the Yebisu Brewery that once occupied the whole site, Ebisu is one of Tokyo's most polished neighborhoods. Garden Place offers elevated dining and city views, while the izakaya alleys near the station are where office workers unwind. The quieter, more adult alternative to Shibuya — 10 minutes away.",
     spots: [
-      { name: "Yebisu Beer Museum", desc: "Free museum inside the historic brewery. Paid tasting flights of Yebisu's full range — the Premium is the one.", hours: "11am–7pm, closed Mon", price: "¥ (tastings)", cat: "Culture" },
-      { name: "Ebisu Yokocho", desc: "Retro covered alley of tiny izakayas packed with office workers after dark. Smoky, loud, and completely authentic.", hours: "5pm–1am", price: "¥¥", cat: "Izakaya" },
-      { name: "Craft Beer Market Ebisu", desc: "30+ rotating taps of Japanese and international craft beer in a casual pub setting.", hours: "11:30am–11pm", price: "¥¥", cat: "Bar" },
-      { name: "Ramen Afuri Ebisu", desc: "Light yuzu shio ramen and rich chicken broth — two radically different, both excellent bowls.", hours: "11am–5am", price: "¥¥", cat: "Ramen" },
-      { name: "Ebisu Garden Place Rooftop Bar", desc: "Sweeping views over Tokyo with well-made cocktails. The best opening move for an Ebisu evening.", hours: "5pm–midnight", price: "¥¥¥", cat: "Bar" }
+      { name: "Yebisu Beer Museum", desc: "Free museum inside the historic brewery. Paid tasting flights of Yebisu's full range — the Premium is the one.", hours: "11am–7pm, closed Mon", price: "¥ (tastings)", cat: "Culture",
+        lat: 35.6436, lng: 139.7159, address: "4-20-1 Ebisu, Shibuya-ku, Tokyo (Yebisu Garden Place)" },
+      { name: "Ebisu Yokocho", desc: "Retro covered alley of tiny izakayas packed with office workers after dark. Smoky, loud, and completely authentic.", hours: "5pm–1am", price: "¥¥", cat: "Izakaya",
+        lat: 35.6463, lng: 139.7103, address: "1-7 Ebisunishi, Shibuya-ku, Tokyo" },
+      { name: "Craft Beer Market Ebisu", desc: "30+ rotating taps of Japanese and international craft beer in a casual pub setting.", hours: "11:30am–11pm", price: "¥¥", cat: "Bar",
+        lat: 35.6460, lng: 139.7108, address: "1-6-12 Ebisunishi, Shibuya-ku, Tokyo" },
+      { name: "Ramen Afuri Ebisu", desc: "Light yuzu shio ramen and rich chicken broth — two radically different, both excellent bowls.", hours: "11am–5am", price: "¥¥", cat: "Ramen",
+        lat: 35.6470, lng: 139.7098, address: "1-1-7 Ebisunishi, Shibuya-ku, Tokyo" },
+      { name: "Ebisu Garden Place Rooftop Bar", desc: "Sweeping views over Tokyo with well-made cocktails. The best opening move for an Ebisu evening.", hours: "5pm–midnight", price: "¥¥¥", cat: "Bar",
+        lat: 35.6440, lng: 139.7161, address: "4-20-7 Ebisu, Shibuya-ku, Tokyo" }
     ]
   },
 
@@ -810,11 +922,16 @@ const HOODS = [
     vibeShort: "Electric, chaotic, unmissable — the beating heart of Tokyo",
     vibe: "The Shibuya Scramble, the neon towers, the sheer volume of humanity — this is the Tokyo of imagination turned to 11. Exhausting and exhilarating in equal measure. Go at night when the lights blaze, grab ramen at 2am, then retreat. Multiple floors of entertainment, club music on every street, and yakitori smoke in every alley.",
     spots: [
-      { name: "Round 1 Stadium Shibuya", desc: "5-floor entertainment megaplex: bowling, batting cages, darts, full arcade, karaoke. Runs until 5am daily.", hours: "10am–5am daily", price: "¥¥", cat: "Activity" },
-      { name: "Ichiran Ramen (24hr)", desc: "Solo-booth tonkotsu ramen. Order by form, eat in your private flavor-concentration booth. Open all night.", hours: "24 hours", price: "¥¥", cat: "Ramen" },
-      { name: "Womb", desc: "Tokyo's premier techno and electronic club. 4 floors, a brutal sound system, and world-class DJs every weekend.", hours: "Fri–Sat 11pm–5am", price: "¥¥¥", cat: "Music" },
-      { name: "Nonbei Yokocho", desc: "Narrow alley of lantern-lit micro-bars, some seating only 8 people. Wander in, order whatever, stay all night.", hours: "6pm–2am", price: "¥¥", cat: "Bar" },
-      { name: "Shibuya Crossing Viewpoint", desc: "Watch 3,000 people scramble simultaneously from the Starbucks window or Mag's Park observation deck. Free.", hours: "Always open", price: "Free", cat: "Culture" }
+      { name: "Round 1 Stadium Shibuya", desc: "5-floor entertainment megaplex: bowling, batting cages, darts, full arcade, karaoke. Runs until 5am daily.", hours: "10am–5am daily", price: "¥¥", cat: "Activity",
+        lat: 35.6581, lng: 139.6978, address: "29-1 Udagawacho, Shibuya-ku, Tokyo" },
+      { name: "Ichiran Ramen (24hr)", desc: "Solo-booth tonkotsu ramen. Order by form, eat in your private flavor-concentration booth. Open all night.", hours: "24 hours", price: "¥¥", cat: "Ramen",
+        lat: 35.6592, lng: 139.6993, address: "2-22-3 Dogenzaka, Shibuya-ku, Tokyo" },
+      { name: "Womb", desc: "Tokyo's premier techno and electronic club. 4 floors, a brutal sound system, and world-class DJs every weekend.", hours: "Fri–Sat 11pm–5am", price: "¥¥¥", cat: "Music",
+        lat: 35.6570, lng: 139.6990, address: "2-16 Maruyamacho, Shibuya-ku, Tokyo" },
+      { name: "Nonbei Yokocho", desc: "Narrow alley of lantern-lit micro-bars, some seating only 8 people. Wander in, order whatever, stay all night.", hours: "6pm–2am", price: "¥¥", cat: "Bar",
+        lat: 35.6590, lng: 139.7012, address: "1-25 Jinnan, Shibuya-ku, Tokyo" },
+      { name: "Shibuya Crossing Viewpoint", desc: "Watch 3,000 people scramble simultaneously from the Starbucks window or Mag's Park observation deck. Free.", hours: "Always open", price: "Free", cat: "Culture",
+        lat: 35.6593, lng: 139.7005, address: "2-24-12 Shibuya, Shibuya-ku, Tokyo" }
     ]
   },
 
@@ -828,11 +945,16 @@ const HOODS = [
     vibeShort: "Fashion extremes and sacred forests — crepes, couture, and Meiji Shrine",
     vibe: "Harajuku is two worlds in one: Takeshita Street's cosplay fashion chaos, and the forested path to Meiji Shrine. Omotesando's boulevard of luxury boutiques connects them. Evening brings a different crowd — the restaurants and bars around Omotesando are refined, quiet, and excellent.",
     spots: [
-      { name: "Meiji Shrine", desc: "Sacred Shinto shrine set in 170 acres of forested parkland. Profoundly calm even on crowded weekends. Go early.", hours: "Sunrise–sunset", price: "Free", cat: "Culture" },
-      { name: "Harajuku Gyoza Lou", desc: "Legendary gyoza joint — fried, boiled, or pan-fried, the only question is how many plates.", hours: "11:30am–10:30pm, closed Mon", price: "¥", cat: "Izakaya" },
-      { name: "Omotesando Hills", desc: "Herzog & de Meuron-designed luxury mall built along a spiral ramp. Worth it for the architecture alone.", hours: "11am–9pm", price: "Free to browse", cat: "Culture" },
-      { name: "Commune 246", desc: "Outdoor container-bar food village near Omotesando. Casual, eclectic, great for watching the crowd.", hours: "11am–11pm", price: "¥¥", cat: "Bar" },
-      { name: "Sushisho Saito Omotesando", desc: "One of Tokyo's finest counter sushi experiences — 9 seats, seasonal omakase, book weeks ahead.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥¥¥", cat: "Sushi" }
+      { name: "Meiji Shrine", desc: "Sacred Shinto shrine set in 170 acres of forested parkland. Profoundly calm even on crowded weekends. Go early.", hours: "Sunrise–sunset", price: "Free", cat: "Culture",
+        lat: 35.6763, lng: 139.6993, address: "1-1 Yoyogikamizonocho, Shibuya-ku, Tokyo" },
+      { name: "Harajuku Gyoza Lou", desc: "Legendary gyoza joint — fried, boiled, or pan-fried, the only question is how many plates.", hours: "11:30am–10:30pm, closed Mon", price: "¥", cat: "Izakaya",
+        lat: 35.6700, lng: 139.7027, address: "6-2-4 Jingumae, Shibuya-ku, Tokyo" },
+      { name: "Omotesando Hills", desc: "Herzog & de Meuron-designed luxury mall built along a spiral ramp. Worth it for the architecture alone.", hours: "11am–9pm", price: "Free to browse", cat: "Culture",
+        lat: 35.6658, lng: 139.7082, address: "4-12-10 Jingumae, Shibuya-ku, Tokyo" },
+      { name: "Commune 246", desc: "Outdoor container-bar food village near Omotesando. Casual, eclectic, great for watching the crowd.", hours: "11am–11pm", price: "¥¥", cat: "Bar",
+        lat: 35.6655, lng: 139.7127, address: "3-13 Minami-Aoyama, Minato-ku, Tokyo" },
+      { name: "Sushisho Saito Omotesando", desc: "One of Tokyo's finest counter sushi experiences — 9 seats, seasonal omakase, book weeks ahead.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥¥¥", cat: "Sushi",
+        lat: 35.6659, lng: 139.7090, address: "4-4-6 Jingumae, Shibuya-ku, Tokyo" }
     ]
   },
 
@@ -846,11 +968,16 @@ const HOODS = [
     vibeShort: "Tokyo's indie music heartland — live houses, vintage, izakayas",
     vibe: "Shimokitazawa is where Tokyo's musicians, students, and creative types have gravitated for decades. The streets are slightly ramshackle, the izakayas are no-frills perfect, and on any given night there are 10+ live music shows within a 5-minute walk. Anti-commercial, ungentrified, and irreplaceable.",
     spots: [
-      { name: "Shelter", desc: "One of Tokyo's most beloved live houses — indie, punk, and rock in an intimate basement room since 1992.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
-      { name: "Club Que", desc: "Iconic basement venue, home to the city's finest indie rock programming. Legendary 400-person capacity.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
-      { name: "Shiraume Izakaya", desc: "Classic old-school izakaya with excellent skewers and a deep shochu list. Packed most nights.", hours: "5pm–midnight, closed Sun", price: "¥¥", cat: "Izakaya" },
-      { name: "Daisy Bar", desc: "Friendly neighborhood bar with vinyl records spinning and a cheerful, mixed crowd all night.", hours: "8pm–3am", price: "¥¥", cat: "Bar" },
-      { name: "Garage Shimokitazawa", desc: "Raw, loud, and essential: punk and alternative live music in a no-frills basement space.", hours: "Doors vary by show", price: "¥¥", cat: "Music" }
+      { name: "Shelter", desc: "One of Tokyo's most beloved live houses — indie, punk, and rock in an intimate basement room since 1992.", hours: "Doors vary by show", price: "¥¥", cat: "Music",
+        lat: 35.6620, lng: 139.6684, address: "B1F 2-6-10 Kitazawa, Setagaya-ku, Tokyo" },
+      { name: "Club Que", desc: "Iconic basement venue, home to the city's finest indie rock programming. Legendary 400-person capacity.", hours: "Doors vary by show", price: "¥¥", cat: "Music",
+        lat: 35.6618, lng: 139.6690, address: "B2F 3-17-4 Kitazawa, Setagaya-ku, Tokyo" },
+      { name: "Shiraume Izakaya", desc: "Classic old-school izakaya with excellent skewers and a deep shochu list. Packed most nights.", hours: "5pm–midnight, closed Sun", price: "¥¥", cat: "Izakaya",
+        lat: 35.6610, lng: 139.6675, address: "2-14-17 Kitazawa, Setagaya-ku, Tokyo" },
+      { name: "Daisy Bar", desc: "Friendly neighborhood bar with vinyl records spinning and a cheerful, mixed crowd all night.", hours: "8pm–3am", price: "¥¥", cat: "Bar",
+        lat: 35.6615, lng: 139.6668, address: "1-30-7 Kitazawa, Setagaya-ku, Tokyo" },
+      { name: "Garage Shimokitazawa", desc: "Raw, loud, and essential: punk and alternative live music in a no-frills basement space.", hours: "Doors vary by show", price: "¥¥", cat: "Music",
+        lat: 35.6625, lng: 139.6672, address: "B1F 2-18-3 Kitazawa, Setagaya-ku, Tokyo" }
     ]
   },
 
@@ -864,11 +991,16 @@ const HOODS = [
     vibeShort: "Young, local, unpretentious — Tokyo's best izakaya crawl neighborhood",
     vibe: "Sangenjaya's tight lanes and covered arcades are packed with izakayas, ramen shops, and neighborhood bars serving a young, local crowd who care about good food at fair prices. One of Tokyo's most authentic evening experiences — and never overrun with tourists.",
     spots: [
-      { name: "Batting Center Sangenjaya", desc: "Local batting cages with 80–130 kph speed settings and short queues. ¥300 per round, no reservation needed.", hours: "10am–10pm", price: "¥", cat: "Activity" },
-      { name: "Sancha Darts Bar", desc: "Multiple professional dart boards, strong cocktails, and a reliably fun mixed crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity" },
-      { name: "Izakaya Uoshin", desc: "Beloved neighborhood fish izakaya with extremely fresh sashimi platters and cold Kirin draft.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Bar Three Sangenjaya", desc: "No-frills shot bar packed after midnight. Dirt-cheap whisky highballs and very loud music.", hours: "7pm–3am", price: "¥", cat: "Bar" },
-      { name: "Ramen Yokozuna", desc: "Hearty, beefy ramen in a stadium-themed shop. The championship bowl is genuinely enormous.", hours: "11am–3am", price: "¥", cat: "Ramen" }
+      { name: "Batting Center Sangenjaya", desc: "Local batting cages with 80–130 kph speed settings and short queues. ¥300 per round, no reservation needed.", hours: "10am–10pm", price: "¥", cat: "Activity",
+        lat: 35.6450, lng: 139.6702, address: "2-21-1 Sangenjaya, Setagaya-ku, Tokyo" },
+      { name: "Sancha Darts Bar", desc: "Multiple professional dart boards, strong cocktails, and a reliably fun mixed crowd.", hours: "6pm–2am", price: "¥¥", cat: "Activity",
+        lat: 35.6443, lng: 139.6695, address: "1-35-12 Sangenjaya, Setagaya-ku, Tokyo" },
+      { name: "Izakaya Uoshin", desc: "Beloved neighborhood fish izakaya with extremely fresh sashimi platters and cold Kirin draft.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.6438, lng: 139.6700, address: "2-1-5 Sangenjaya, Setagaya-ku, Tokyo" },
+      { name: "Bar Three Sangenjaya", desc: "No-frills shot bar packed after midnight. Dirt-cheap whisky highballs and very loud music.", hours: "7pm–3am", price: "¥", cat: "Bar",
+        lat: 35.6442, lng: 139.6688, address: "1-25-6 Sangenjaya, Setagaya-ku, Tokyo" },
+      { name: "Ramen Yokozuna", desc: "Hearty, beefy ramen in a stadium-themed shop. The championship bowl is genuinely enormous.", hours: "11am–3am", price: "¥", cat: "Ramen",
+        lat: 35.6435, lng: 139.6712, address: "2-16-4 Sangenjaya, Setagaya-ku, Tokyo" }
     ]
   },
 
@@ -882,11 +1014,16 @@ const HOODS = [
     vibeShort: "Tokyo's Little Paris — sweets, European vibes, and great sushi",
     vibe: "Jiyugaoka earns its Little Paris nickname with European-style cafes, excellent patisseries, and leafy streets. It's genuinely charming and unhurried — perfect for a slow morning or long lunch. The neighborhood is famous for sweets, but solid ramen, sushi, and wine bars are well represented too.",
     spots: [
-      { name: "Mont St. Clair", desc: "Legendary patisserie by star chef Tsujiguchi Hironobu. Lines form early every day — still worth every minute.", hours: "11am–7pm, closed Tue", price: "¥¥", cat: "Cafe" },
-      { name: "Jiyugaoka Sweets Forest", desc: "Whimsical theme-park-style dessert complex with six specialty sweets shops under one roof.", hours: "10am–8pm", price: "¥¥", cat: "Cafe" },
-      { name: "Sushi Kurihara", desc: "Neighborhood counter sushi with a casual atmosphere and excellent value lunch sets.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥", cat: "Sushi" },
-      { name: "Bar Benfiddich Jiyugaoka", desc: "Tiny natural wine and cocktail bar with expert bartenders and a great late-night vibe.", hours: "7pm–1am, closed Sun", price: "¥¥¥", cat: "Bar" },
-      { name: "Ramen Honda", desc: "Local legend: rich shoyu broth slowly evolving for 30 years. Cash only, always a short queue.", hours: "11am–10pm, closed Wed", price: "¥", cat: "Ramen" }
+      { name: "Mont St. Clair", desc: "Legendary patisserie by star chef Tsujiguchi Hironobu. Lines form early every day — still worth every minute.", hours: "11am–7pm, closed Tue", price: "¥¥", cat: "Cafe",
+        lat: 35.6060, lng: 139.6895, address: "2-22-4 Jiyugaoka, Meguro-ku, Tokyo" },
+      { name: "Jiyugaoka Sweets Forest", desc: "Whimsical theme-park-style dessert complex with six specialty sweets shops under one roof.", hours: "10am–8pm", price: "¥¥", cat: "Cafe",
+        lat: 35.6063, lng: 139.6888, address: "2-25-7 Jiyugaoka, Meguro-ku, Tokyo" },
+      { name: "Sushi Kurihara", desc: "Neighborhood counter sushi with a casual atmosphere and excellent value lunch sets.", hours: "12–2pm, 6–10pm, closed Mon", price: "¥¥¥", cat: "Sushi",
+        lat: 35.6075, lng: 139.6908, address: "1-14-12 Jiyugaoka, Meguro-ku, Tokyo" },
+      { name: "Bar Benfiddich Jiyugaoka", desc: "Tiny natural wine and cocktail bar with expert bartenders and a great late-night vibe.", hours: "7pm–1am, closed Sun", price: "¥¥¥", cat: "Bar",
+        lat: 35.6070, lng: 139.6920, address: "1-3-5 Jiyugaoka, Meguro-ku, Tokyo" },
+      { name: "Ramen Honda", desc: "Local legend: rich shoyu broth slowly evolving for 30 years. Cash only, always a short queue.", hours: "11am–10pm, closed Wed", price: "¥", cat: "Ramen",
+        lat: 35.6082, lng: 139.6925, address: "2-10-8 Jiyugaoka, Meguro-ku, Tokyo" }
     ]
   },
 
@@ -900,11 +1037,16 @@ const HOODS = [
     vibeShort: "Underrated local hub — bowling, award ramen, and zero pretension",
     vibe: "Gotanda doesn't make the travel guides, and locals love it for exactly that reason. A working neighborhood with a down-to-earth izakaya scene, excellent ramen, and actual bowling lanes — no queues, no hype, honest prices. A 20-minute walk from Meguro and a welcome escape from curated cool.",
     spots: [
-      { name: "Mensho Tokyo Gotanda", desc: "Award-winning ramen with a rotating seasonal menu. The lamb broth is a genuine standout; sell out by noon.", hours: "11am–3pm, 6–10pm, closed Mon", price: "¥¥", cat: "Ramen" },
-      { name: "Gotanda Bowling Center", desc: "Full 20-lane bowling alley with shoe rental and a bar. Local crowd, no tourist queues, great fun.", hours: "10am–midnight", price: "¥¥", cat: "Bowling" },
-      { name: "Izakaya Hanamichi", desc: "Old-school izakaya with grilled fish, house sake, and the best all-you-can-drink deal in the area.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Standing Sushi Gotanda", desc: "Standing-bar sushi with fresh cuts at excellent prices. No reservation, in and out in 30 minutes.", hours: "11:30am–10pm", price: "¥¥", cat: "Sushi" },
-      { name: "JILL'S Bar Gotanda", desc: "Cocktail bar with a dart board, knowledgeable bartenders, and a loyal, relaxed local following.", hours: "6pm–2am, closed Sun", price: "¥¥", cat: "Activity" }
+      { name: "Mensho Tokyo Gotanda", desc: "Award-winning ramen with a rotating seasonal menu. The lamb broth is a genuine standout; sell out by noon.", hours: "11am–3pm, 6–10pm, closed Mon", price: "¥¥", cat: "Ramen",
+        lat: 35.6272, lng: 139.7225, address: "5-36-13 Higashigotanda, Shinagawa-ku, Tokyo" },
+      { name: "Gotanda Bowling Center", desc: "Full 20-lane bowling alley with shoe rental and a bar. Local crowd, no tourist queues, great fun.", hours: "10am–midnight", price: "¥¥", cat: "Bowling",
+        lat: 35.6254, lng: 139.7238, address: "5-22-1 Nishigotanda, Shinagawa-ku, Tokyo" },
+      { name: "Izakaya Hanamichi", desc: "Old-school izakaya with grilled fish, house sake, and the best all-you-can-drink deal in the area.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.6258, lng: 139.7232, address: "5-28-7 Nishigotanda, Shinagawa-ku, Tokyo" },
+      { name: "Standing Sushi Gotanda", desc: "Standing-bar sushi with fresh cuts at excellent prices. No reservation, in and out in 30 minutes.", hours: "11:30am–10pm", price: "¥¥", cat: "Sushi",
+        lat: 35.6268, lng: 139.7226, address: "5-19-3 Nishigotanda, Shinagawa-ku, Tokyo" },
+      { name: "JILL'S Bar Gotanda", desc: "Cocktail bar with a dart board, knowledgeable bartenders, and a loyal, relaxed local following.", hours: "6pm–2am, closed Sun", price: "¥¥", cat: "Activity",
+        lat: 35.6262, lng: 139.7240, address: "5-26-8 Nishigotanda, Shinagawa-ku, Tokyo" }
     ]
   },
 
@@ -918,11 +1060,16 @@ const HOODS = [
     vibeShort: "Tokyo's entertainment capital — Golden Gai, Memory Lane, no bedtime",
     vibe: "Shinjuku contains Tokyo's most concentrated dose of nightlife, from the smoky lantern-lit alleys of Omoide Yokocho to the 200-bar labyrinth of Golden Gai. Every type of food, drink, and entertainment exists here — the challenge is choosing. It runs 24 hours and shows no sign of tiring.",
     spots: [
-      { name: "Golden Gai", desc: "200+ micro-bars crammed into 6 narrow alleys, each seating 5–10 people. The most Tokyo place on earth.", hours: "8pm–4am", price: "¥¥", cat: "Bar" },
-      { name: "Omoide Yokocho", desc: "Smoky alley of yakitori stalls under the train tracks. Eat charred chicken skewers with cold beer at 11pm.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Batting Center New Shinjuku", desc: "Multiple cages steps from the station — 10, 12, and 15 pitches per ¥100. Great for a quick session.", hours: "11am–11pm", price: "¥", cat: "Activity" },
-      { name: "Fuunji Tsukemen", desc: "World-famous thick-broth tsukemen — always a queue, always worth it. Arrive before opening.", hours: "11am–3pm, 5–10pm, closed Sun", price: "¥¥", cat: "Ramen" },
-      { name: "Bar Albatross Golden Gai", desc: "Three-story chandelier-filled bar in the heart of Golden Gai. Tokyo's most beautiful tiny bar.", hours: "6pm–5am", price: "¥¥", cat: "Bar" }
+      { name: "Golden Gai", desc: "200+ micro-bars crammed into 6 narrow alleys, each seating 5–10 people. The most Tokyo place on earth.", hours: "8pm–4am", price: "¥¥", cat: "Bar",
+        lat: 35.6950, lng: 139.7054, address: "1-1 Kabukicho, Shinjuku-ku, Tokyo" },
+      { name: "Omoide Yokocho", desc: "Smoky alley of yakitori stalls under the train tracks. Eat charred chicken skewers with cold beer at 11pm.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.6930, lng: 139.7004, address: "1 Nishishinjuku, Shinjuku-ku, Tokyo" },
+      { name: "Batting Center New Shinjuku", desc: "Multiple cages steps from the station — 10, 12, and 15 pitches per ¥100. Great for a quick session.", hours: "11am–11pm", price: "¥", cat: "Activity",
+        lat: 35.6944, lng: 139.7030, address: "2-19-2 Kabukicho, Shinjuku-ku, Tokyo" },
+      { name: "Fuunji Tsukemen", desc: "World-famous thick-broth tsukemen — always a queue, always worth it. Arrive before opening.", hours: "11am–3pm, 5–10pm, closed Sun", price: "¥¥", cat: "Ramen",
+        lat: 35.6942, lng: 139.7016, address: "2-14-3 Nishishinjuku, Shinjuku-ku, Tokyo" },
+      { name: "Bar Albatross Golden Gai", desc: "Three-story chandelier-filled bar in the heart of Golden Gai. Tokyo's most beautiful tiny bar.", hours: "6pm–5am", price: "¥¥", cat: "Bar",
+        lat: 35.6952, lng: 139.7057, address: "1-1-7 Kabukicho, Shinjuku-ku, Tokyo" }
     ]
   },
 
@@ -936,11 +1083,16 @@ const HOODS = [
     vibeShort: "International and electric — world-class art, clubs, and late nights",
     vibe: "Roppongi is Tokyo's international nightlife district: loud, bright, and operating till dawn. Beneath the party image is a genuine art scene anchored by Mori Art Museum. The best approach: visit the museum at dusk for city views, then let the evening unravel from there.",
     spots: [
-      { name: "Mori Art Museum", desc: "Contemporary art 54 floors up in Roppongi Hills. The Tokyo City View observation deck is included in admission.", hours: "10am–10pm, Tue to 5pm", price: "¥¥¥", cat: "Culture" },
-      { name: "SuperDeluxe", desc: "Legendary underground events space for experimental music, live performance, and art shows. Always interesting.", hours: "Event-based, usually 7pm–1am", price: "¥¥", cat: "Music" },
-      { name: "Agave Bar", desc: "400+ agave spirits (tequila, mezcal, raicilla) and genuinely expert bartenders. A pilgrimage for serious drinkers.", hours: "6pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
-      { name: "Torii Darts Bar Roppongi", desc: "Quality soft-tip dart boards, private booths, and late-night service until 5am on weekends.", hours: "6pm–5am Fri–Sat, 6pm–2am weekdays", price: "¥¥", cat: "Activity" },
-      { name: "Ramen Jin Roppongi", desc: "No-frills counter ramen in the middle of the party district — perfect midnight fuel after the clubs.", hours: "11am–5am", price: "¥", cat: "Ramen" }
+      { name: "Mori Art Museum", desc: "Contemporary art 54 floors up in Roppongi Hills. The Tokyo City View observation deck is included in admission.", hours: "10am–10pm, Tue to 5pm", price: "¥¥¥", cat: "Culture",
+        lat: 35.6604, lng: 139.7311, address: "6-10-1 Roppongi, Minato-ku, Tokyo (Mori Tower)" },
+      { name: "SuperDeluxe", desc: "Legendary underground events space for experimental music, live performance, and art shows. Always interesting.", hours: "Event-based, usually 7pm–1am", price: "¥¥", cat: "Music",
+        lat: 35.6630, lng: 139.7323, address: "B1F 3-1-25 Nishiazabu, Minato-ku, Tokyo" },
+      { name: "Agave Bar", desc: "400+ agave spirits (tequila, mezcal, raicilla) and genuinely expert bartenders. A pilgrimage for serious drinkers.", hours: "6pm–2am, closed Sun", price: "¥¥¥", cat: "Bar",
+        lat: 35.6627, lng: 139.7335, address: "B1F Chalet Aoyama Bldg, 7-15-10 Roppongi, Minato-ku" },
+      { name: "Torii Darts Bar Roppongi", desc: "Quality soft-tip dart boards, private booths, and late-night service until 5am on weekends.", hours: "6pm–5am Fri–Sat, 6pm–2am weekdays", price: "¥¥", cat: "Activity",
+        lat: 35.6622, lng: 139.7320, address: "6-12-3 Roppongi, Minato-ku, Tokyo" },
+      { name: "Ramen Jin Roppongi", desc: "No-frills counter ramen in the middle of the party district — perfect midnight fuel after the clubs.", hours: "11am–5am", price: "¥", cat: "Ramen",
+        lat: 35.6626, lng: 139.7322, address: "7-7-7 Roppongi, Minato-ku, Tokyo" }
     ]
   },
 
@@ -954,11 +1106,16 @@ const HOODS = [
     vibeShort: "Upscale village — world-class sushi, great izakayas, embassy crowd",
     vibe: "Azabu-Juban is Tokyo at its most quietly sophisticated: a compact shopping street ringed by embassies, private clubs, and some of the city's finest restaurants. It's unpretentious for its price point, with neighborhood izakayas next to three-Michelin spots. The annual summer festival draws 500,000 people — wild energy in an otherwise serene area.",
     spots: [
-      { name: "Sushi Sho Azabu", desc: "One of Tokyo's most legendary omakase counters. Nearly impossible to book — try walk-in for lunch.", hours: "12–2pm, 6–9pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi" },
-      { name: "Ushigoro Bambina", desc: "Premium wagyu yakiniku in a sleek modern setting. Order the A5 sirloin and pair with cold sake.", hours: "5pm–11pm", price: "¥¥¥¥", cat: "Izakaya" },
-      { name: "Nanticha Thai Izakaya", desc: "Beloved local spot blending Thai and Japanese drinking food. Packed most nights with a loyal neighborhood crowd.", hours: "6pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Maru Cocktail Bar", desc: "Cozy cocktail bar at the heart of the expat community. Expertly made drinks, never overcrowded.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
-      { name: "Toufuya Ukai", desc: "Tofu kaiseki cuisine in a stunning Edo-era merchant house with a koi garden. One of Tokyo's most beautiful meals.", hours: "11am–3pm, 5–9pm", price: "¥¥¥¥", cat: "Culture" }
+      { name: "Sushi Sho Azabu", desc: "One of Tokyo's most legendary omakase counters. Nearly impossible to book — try walk-in for lunch.", hours: "12–2pm, 6–9pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi",
+        lat: 35.6548, lng: 139.7360, address: "2-4-7 Azabujuban, Minato-ku, Tokyo" },
+      { name: "Ushigoro Bambina", desc: "Premium wagyu yakiniku in a sleek modern setting. Order the A5 sirloin and pair with cold sake.", hours: "5pm–11pm", price: "¥¥¥¥", cat: "Izakaya",
+        lat: 35.6552, lng: 139.7368, address: "2-6-2 Azabujuban, Minato-ku, Tokyo" },
+      { name: "Nanticha Thai Izakaya", desc: "Beloved local spot blending Thai and Japanese drinking food. Packed most nights with a loyal neighborhood crowd.", hours: "6pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.6545, lng: 139.7355, address: "1-5-9 Azabujuban, Minato-ku, Tokyo" },
+      { name: "Maru Cocktail Bar", desc: "Cozy cocktail bar at the heart of the expat community. Expertly made drinks, never overcrowded.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar",
+        lat: 35.6558, lng: 139.7375, address: "3-10-5 Azabujuban, Minato-ku, Tokyo" },
+      { name: "Toufuya Ukai", desc: "Tofu kaiseki cuisine in a stunning Edo-era merchant house with a koi garden. One of Tokyo's most beautiful meals.", hours: "11am–3pm, 5–9pm", price: "¥¥¥¥", cat: "Culture",
+        lat: 35.6540, lng: 139.7345, address: "4-4-13 Shiba-koen, Minato-ku, Tokyo" }
     ]
   },
 
@@ -972,11 +1129,16 @@ const HOODS = [
     vibeShort: "Expat village meets Japanese tradition — great dining, zero attitude",
     vibe: "Hiroo sits between Roppongi and Ebisu, home to embassies, international schools, and some of Tokyo's most considered restaurants. Calm, adult, and unhurried — the anti-Roppongi when you want quality food and conversation without the noise. The shopping street has excellent options in every direction.",
     spots: [
-      { name: "Hiroo Onsen Bathhouse", desc: "Neighborhood sentō (public bath) with hot mineral baths — a genuine Tokyo experience at local prices.", hours: "3pm–11pm, closed Thu", price: "¥", cat: "Culture" },
-      { name: "Gyoza Hohei", desc: "Legendary back-street gyoza specialist — fried, boiled, and steamed versions, all perfect.", hours: "11:30am–2:30pm, 5:30–10pm, closed Mon", price: "¥", cat: "Izakaya" },
-      { name: "National Azabu Supermarket", desc: "Iconic international supermarket serving Tokyo's expat community since 1975. A genuine Hiroo landmark.", hours: "9:30am–9pm", price: "Free to browse", cat: "Culture" },
-      { name: "Sumire Bar Hiroo", desc: "Cozy neighborhood bar with an excellent Japanese whisky selection and expert recommendations.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar" },
-      { name: "Ramen Mentendo Hiroo", desc: "Rich, deeply satisfying chicken-based broth in a clean modern setting. One of Hiroo's best-kept secrets.", hours: "11am–9pm, closed Wed", price: "¥¥", cat: "Ramen" }
+      { name: "Hiroo Onsen Bathhouse", desc: "Neighborhood sentō (public bath) with hot mineral baths — a genuine Tokyo experience at local prices.", hours: "3pm–11pm, closed Thu", price: "¥", cat: "Culture",
+        lat: 35.6498, lng: 139.7225, address: "5-19-9 Hiroo, Shibuya-ku, Tokyo" },
+      { name: "Gyoza Hohei", desc: "Legendary back-street gyoza specialist — fried, boiled, and steamed versions, all perfect.", hours: "11:30am–2:30pm, 5:30–10pm, closed Mon", price: "¥", cat: "Izakaya",
+        lat: 35.6496, lng: 139.7212, address: "5-12-2 Hiroo, Shibuya-ku, Tokyo" },
+      { name: "National Azabu Supermarket", desc: "Iconic international supermarket serving Tokyo's expat community since 1975. A genuine Hiroo landmark.", hours: "9:30am–9pm", price: "Free to browse", cat: "Culture",
+        lat: 35.6503, lng: 139.7230, address: "4-5-2 Minami-Azabu, Minato-ku, Tokyo" },
+      { name: "Sumire Bar Hiroo", desc: "Cozy neighborhood bar with an excellent Japanese whisky selection and expert recommendations.", hours: "7pm–2am, closed Sun", price: "¥¥¥", cat: "Bar",
+        lat: 35.6493, lng: 139.7218, address: "5-14-5 Hiroo, Shibuya-ku, Tokyo" },
+      { name: "Ramen Mentendo Hiroo", desc: "Rich, deeply satisfying chicken-based broth in a clean modern setting. One of Hiroo's best-kept secrets.", hours: "11am–9pm, closed Wed", price: "¥¥", cat: "Ramen",
+        lat: 35.6506, lng: 139.7208, address: "5-8-3 Hiroo, Shibuya-ku, Tokyo" }
     ]
   },
 
@@ -990,11 +1152,16 @@ const HOODS = [
     vibeShort: "Quiet and local — lucky cat temple, batting cages, real Tokyo life",
     vibe: "Setagaya ward is where a lot of Tokyo's creative class actually lives. Away from the tourist trail it rewards the curious: the original lucky-cat temple draws pilgrims from across Japan, the local izakayas are excellent value, and the batting cages attract everyone from school kids to salary workers. Properly local Tokyo.",
     spots: [
-      { name: "Gotoku-ji Temple", desc: "The birthplace of the maneki-neko lucky cat. Hundreds of ceramic cats cover the grounds — unexpectedly moving.", hours: "9am–5pm", price: "Free", cat: "Culture" },
-      { name: "Setagaya Batting Center", desc: "Well-maintained cages with 80–130 kph settings and friendly staff. ¥300 per round, no queue.", hours: "10am–10pm", price: "¥", cat: "Activity" },
-      { name: "Setagaya Bowl", desc: "Full-service bowling alley with 24 lanes, a bar, and weekend DJ nights.", hours: "10am–midnight", price: "¥¥", cat: "Bowling" },
-      { name: "Ramen Shimamoto", desc: "Quietly revered miso ramen with a corn-butter option that tastes like pure winter comfort.", hours: "11:30am–9pm, closed Tue", price: "¥", cat: "Ramen" },
-      { name: "Izakaya Mokichi", desc: "Family-run izakaya with an encyclopedic sake list and the best old-school kushiyaki skewers in the ward.", hours: "5pm–11pm, closed Mon", price: "¥¥", cat: "Izakaya" }
+      { name: "Gotoku-ji Temple", desc: "The birthplace of the maneki-neko lucky cat. Hundreds of ceramic cats cover the grounds — unexpectedly moving.", hours: "9am–5pm", price: "Free", cat: "Culture",
+        lat: 35.6521, lng: 139.6505, address: "2-24-7 Gotokuji, Setagaya-ku, Tokyo" },
+      { name: "Setagaya Batting Center", desc: "Well-maintained cages with 80–130 kph settings and friendly staff. ¥300 per round, no queue.", hours: "10am–10pm", price: "¥", cat: "Activity",
+        lat: 35.6478, lng: 139.6537, address: "4-12-14 Kamimachi, Setagaya-ku, Tokyo" },
+      { name: "Setagaya Bowl", desc: "Full-service bowling alley with 24 lanes, a bar, and weekend DJ nights.", hours: "10am–midnight", price: "¥¥", cat: "Bowling",
+        lat: 35.6482, lng: 139.6520, address: "4-1-2 Kamimachi, Setagaya-ku, Tokyo" },
+      { name: "Ramen Shimamoto", desc: "Quietly revered miso ramen with a corn-butter option that tastes like pure winter comfort.", hours: "11:30am–9pm, closed Tue", price: "¥", cat: "Ramen",
+        lat: 35.6470, lng: 139.6542, address: "3-7-13 Kamimachi, Setagaya-ku, Tokyo" },
+      { name: "Izakaya Mokichi", desc: "Family-run izakaya with an encyclopedic sake list and the best old-school kushiyaki skewers in the ward.", hours: "5pm–11pm, closed Mon", price: "¥¥", cat: "Izakaya",
+        lat: 35.6485, lng: 139.6548, address: "4-15-8 Kamimachi, Setagaya-ku, Tokyo" }
     ]
   },
 
@@ -1008,11 +1175,16 @@ const HOODS = [
     vibeShort: "Bohemian Tokyo — vintage records, punk clubs, zero pretense",
     vibe: "Koenji is Tokyo's most defiantly alternative neighborhood: vintage record shops, underground live houses, secondhand fashion, and izakayas unchanged since the 1980s. The antithesis of Harajuku's commercialized cool. Come for a live show, stay for the dive bars and cheap ramen at 2am.",
     spots: [
-      { name: "Koenji High", desc: "Mid-size live venue hosting some of Tokyo's best indie, experimental, and underground rock shows.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
-      { name: "20000V", desc: "Basement club known for raw punk, noise, and DIY indie shows. Tiny, loud, and absolutely authentic.", hours: "Doors vary by show", price: "¥¥", cat: "Music" },
-      { name: "Enban Record Bar", desc: "Record shop and bar hybrid where DJs spin vinyl and whisky is cheap. Tokyo counterculture at its finest.", hours: "3pm–midnight, Fri–Sun to 2am", price: "¥¥", cat: "Bar" },
-      { name: "Ramen Jirou Koenji", desc: "Enormous bowls of heavy, porky ramen favored by students and night owls. Finishing optional.", hours: "11am–3am", price: "¥", cat: "Ramen" },
-      { name: "Izakaya Hana Koenji", desc: "Ancient wooden izakaya pouring cold Sapporo and grilling kushiyaki since 1971. Nothing has changed.", hours: "5pm–midnight, closed Mon", price: "¥", cat: "Izakaya" }
+      { name: "Koenji High", desc: "Mid-size live venue hosting some of Tokyo's best indie, experimental, and underground rock shows.", hours: "Doors vary by show", price: "¥¥", cat: "Music",
+        lat: 35.7055, lng: 139.6498, address: "2-14-8 Koenji-kita, Suginami-ku, Tokyo" },
+      { name: "20000V", desc: "Basement club known for raw punk, noise, and DIY indie shows. Tiny, loud, and absolutely authentic.", hours: "Doors vary by show", price: "¥¥", cat: "Music",
+        lat: 35.7047, lng: 139.6488, address: "B1F 2-12-9 Koenji-minami, Suginami-ku, Tokyo" },
+      { name: "Enban Record Bar", desc: "Record shop and bar hybrid where DJs spin vinyl and whisky is cheap. Tokyo counterculture at its finest.", hours: "3pm–midnight, Fri–Sun to 2am", price: "¥¥", cat: "Bar",
+        lat: 35.7050, lng: 139.6495, address: "3-8-13 Koenji-minami, Suginami-ku, Tokyo" },
+      { name: "Ramen Jirou Koenji", desc: "Enormous bowls of heavy, porky ramen favored by students and night owls. Finishing optional.", hours: "11am–3am", price: "¥", cat: "Ramen",
+        lat: 35.7058, lng: 139.6484, address: "2-21-16 Koenji-kita, Suginami-ku, Tokyo" },
+      { name: "Izakaya Hana Koenji", desc: "Ancient wooden izakaya pouring cold Sapporo and grilling kushiyaki since 1971. Nothing has changed.", hours: "5pm–midnight, closed Mon", price: "¥", cat: "Izakaya",
+        lat: 35.7045, lng: 139.6503, address: "3-16-4 Koenji-minami, Suginami-ku, Tokyo" }
     ]
   },
 
@@ -1026,11 +1198,16 @@ const HOODS = [
     vibeShort: "Old money meets salary men — Champs-Élysées by day, izakaya alleys by night",
     vibe: "Ginza is Japan's most expensive shopping district: glass facades, designer labels, and perfectly suited shoppers. Shimbashi next door is its alter ego — a dense grid of izakayas where salary workers celebrate and commiserate in equal measure. Between Tsukiji's seafood stalls and Ginza's Michelin row, this is one of Tokyo's best food destinations.",
     spots: [
-      { name: "Tsukiji Outer Market", desc: "Post-auction market with hundreds of seafood stalls, tamagoyaki specialists, and the freshest sushi anywhere.", hours: "5am–2pm (most stalls)", price: "¥–¥¥¥¥", cat: "Culture" },
-      { name: "Kyubey Ginza", desc: "Legendary sushi institution since 1936. The place that taught the world what omakase means.", hours: "11:30am–2pm, 5–9:30pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi" },
-      { name: "Shimbashi Izakaya Alley", desc: "Dozens of classic izakayas under and around the train tracks. Oden stew, cold draught, very loud conversation.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Ginza Six Rooftop Terrace", desc: "Rooftop bar atop Tokyo's most extravagant retail complex. The sunset city views are spectacular.", hours: "11am–10pm", price: "¥¥¥", cat: "Bar" },
-      { name: "Karaoke Shidax Shimbashi", desc: "Full karaoke complex with dozens of themed rooms and complete food and drink service until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity" }
+      { name: "Tsukiji Outer Market", desc: "Post-auction market with hundreds of seafood stalls, tamagoyaki specialists, and the freshest sushi anywhere.", hours: "5am–2pm (most stalls)", price: "¥–¥¥¥¥", cat: "Culture",
+        lat: 35.6655, lng: 139.7708, address: "4-16-2 Tsukiji, Chuo-ku, Tokyo" },
+      { name: "Kyubey Ginza", desc: "Legendary sushi institution since 1936. The place that taught the world what omakase means.", hours: "11:30am–2pm, 5–9:30pm, closed Sun", price: "¥¥¥¥¥", cat: "Sushi",
+        lat: 35.6720, lng: 139.7643, address: "8-7-6 Ginza, Chuo-ku, Tokyo" },
+      { name: "Shimbashi Izakaya Alley", desc: "Dozens of classic izakayas under and around the train tracks. Oden stew, cold draught, very loud conversation.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.6664, lng: 139.7578, address: "2-17 Shimbashi, Minato-ku, Tokyo" },
+      { name: "Ginza Six Rooftop Terrace", desc: "Rooftop bar atop Tokyo's most extravagant retail complex. The sunset city views are spectacular.", hours: "11am–10pm", price: "¥¥¥", cat: "Bar",
+        lat: 35.6724, lng: 139.7641, address: "6-10-1 Ginza, Chuo-ku, Tokyo" },
+      { name: "Karaoke Shidax Shimbashi", desc: "Full karaoke complex with dozens of themed rooms and complete food and drink service until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity",
+        lat: 35.6662, lng: 139.7572, address: "2-5-5 Shimbashi, Minato-ku, Tokyo" }
     ]
   },
 
@@ -1044,11 +1221,16 @@ const HOODS = [
     vibeShort: "Electric Town — anime, arcades, and absolute sensory overload",
     vibe: "Akihabara blazes with neon and noise: anime figures in every window, maid cafe hostesses on every corner, multi-floor arcades pumping J-pop. It's completely unironic about its identity and all the better for it. The electronics district still thrives, and there are some genuinely great late-night ramen spots tucked in the back streets.",
     spots: [
-      { name: "Super Potato", desc: "Five floors of retro gaming: original Famicom, arcade boards, obscure imports, and a rooftop arcade.", hours: "11am–8pm weekdays, 10am–8pm weekends", price: "Free to browse", cat: "Activity" },
-      { name: "Club Sega Akihabara No.2", desc: "Multi-floor arcade packed with latest rhythm games, crane machines, and UFO catchers.", hours: "10am–midnight", price: "¥", cat: "Activity" },
-      { name: "Darts Live Akihabara", desc: "State-of-the-art electronic dart bar with online global rankings and late-night weekend service.", hours: "2pm–2am, Fri–Sat to 4am", price: "¥¥", cat: "Activity" },
-      { name: "Ramen Raijin Akihabara", desc: "Dense, bold tonkotsu broth beloved by gamers and night owls. Open until 5am on Friday and Saturday.", hours: "11am–5am Fri–Sat, to 2am other days", price: "¥", cat: "Ramen" },
-      { name: "@Home Maid Cafe", desc: "One of Akihabara's original maid cafes since 2004 — charming, wholesome, and quintessentially Tokyo.", hours: "11:30am–10pm", price: "¥¥¥", cat: "Culture" }
+      { name: "Super Potato", desc: "Five floors of retro gaming: original Famicom, arcade boards, obscure imports, and a rooftop arcade.", hours: "11am–8pm weekdays, 10am–8pm weekends", price: "Free to browse", cat: "Activity",
+        lat: 35.7002, lng: 139.7726, address: "1-11-2 Sotokanda, Chiyoda-ku, Tokyo" },
+      { name: "Club Sega Akihabara No.2", desc: "Multi-floor arcade packed with latest rhythm games, crane machines, and UFO catchers.", hours: "10am–midnight", price: "¥", cat: "Activity",
+        lat: 35.6992, lng: 139.7735, address: "1-10-6 Sotokanda, Chiyoda-ku, Tokyo" },
+      { name: "Darts Live Akihabara", desc: "State-of-the-art electronic dart bar with online global rankings and late-night weekend service.", hours: "2pm–2am, Fri–Sat to 4am", price: "¥¥", cat: "Activity",
+        lat: 35.6985, lng: 139.7740, address: "3-4-7 Sotokanda, Chiyoda-ku, Tokyo" },
+      { name: "Ramen Raijin Akihabara", desc: "Dense, bold tonkotsu broth beloved by gamers and night owls. Open until 5am on Friday and Saturday.", hours: "11am–5am Fri–Sat, to 2am other days", price: "¥", cat: "Ramen",
+        lat: 35.6978, lng: 139.7742, address: "4-5-4 Sotokanda, Chiyoda-ku, Tokyo" },
+      { name: "@Home Maid Cafe", desc: "One of Akihabara's original maid cafes since 2004 — charming, wholesome, and quintessentially Tokyo.", hours: "11:30am–10pm", price: "¥¥¥", cat: "Culture",
+        lat: 35.7004, lng: 139.7724, address: "4F–7F 1-11-4 Sotokanda, Chiyoda-ku, Tokyo" }
     ]
   },
 
@@ -1062,11 +1244,16 @@ const HOODS = [
     vibeShort: "Tokyo's most loveable neighborhood — park, jazz bars, hidden alleys",
     vibe: "Voted Tokyo's most desirable place to live year after year, Kichijoji has it all: Inokashira Park's serene ponds and rowboats, tiny jazz clubs that feel like another era, a chaotic alley of 30 standing bars, serious ramen, and great sushi. The 30-minute train from Meguro is absolutely worth it.",
     spots: [
-      { name: "Inokashira Park", desc: "Beautiful park with a central pond, rowboat rentals, a small zoo, and legendary cherry blossoms in spring.", hours: "Always open (zoo 9:30am–5pm)", price: "Free (rowboats ¥700/30 min)", cat: "Activity" },
-      { name: "Jazz Spot Sometime", desc: "Intimate basement jazz club operating since 1974. Whisky, low light, impeccable live jazz every night.", hours: "6pm–1am, closed Mon", price: "¥¥ + cover", cat: "Music" },
-      { name: "Harmonica Yokocho", desc: "30+ standing bars crammed into a WWII-era alley. Each bar seats 5–8 — squeeze in and order whatever.", hours: "5pm–1am", price: "¥¥", cat: "Bar" },
-      { name: "Round 1 Kichijoji", desc: "Entertainment complex with bowling, batting cages, darts, and a full arcade. Always buzzing.", hours: "10am–5am", price: "¥¥", cat: "Activity" },
-      { name: "Sushi Taka Kichijoji", desc: "Highly regarded counter sushi with a focus on seasonal fish and excellent omakase value.", hours: "12–2pm, 5:30–10pm, closed Wed", price: "¥¥¥", cat: "Sushi" }
+      { name: "Inokashira Park", desc: "Beautiful park with a central pond, rowboat rentals, a small zoo, and legendary cherry blossoms in spring.", hours: "Always open (zoo 9:30am–5pm)", price: "Free (rowboats ¥700/30 min)", cat: "Activity",
+        lat: 35.7033, lng: 139.5748, address: "1-18-31 Gotenyama, Musashino-shi, Tokyo" },
+      { name: "Jazz Spot Sometime", desc: "Intimate basement jazz club operating since 1974. Whisky, low light, impeccable live jazz every night.", hours: "6pm–1am, closed Mon", price: "¥¥ + cover", cat: "Music",
+        lat: 35.7023, lng: 139.5804, address: "1-11-25 Kichijoji-minamicho, Musashino-shi, Tokyo" },
+      { name: "Harmonica Yokocho", desc: "30+ standing bars crammed into a WWII-era alley. Each bar seats 5–8 — squeeze in and order whatever.", hours: "5pm–1am", price: "¥¥", cat: "Bar",
+        lat: 35.7026, lng: 139.5793, address: "1-1-2 Kichijoji-honcho, Musashino-shi, Tokyo" },
+      { name: "Round 1 Kichijoji", desc: "Entertainment complex with bowling, batting cages, darts, and a full arcade. Always buzzing.", hours: "10am–5am", price: "¥¥", cat: "Activity",
+        lat: 35.7014, lng: 139.5813, address: "1-18-2 Kichijoji-honcho, Musashino-shi, Tokyo" },
+      { name: "Sushi Taka Kichijoji", desc: "Highly regarded counter sushi with a focus on seasonal fish and excellent omakase value.", hours: "12–2pm, 5:30–10pm, closed Wed", price: "¥¥¥", cat: "Sushi",
+        lat: 35.7028, lng: 139.5798, address: "1-7-5 Kichijoji-honcho, Musashino-shi, Tokyo" }
     ]
   },
 
@@ -1080,11 +1267,16 @@ const HOODS = [
     vibeShort: "West side power play — Tokyo's biggest entertainment complex and great ramen",
     vibe: "Ikebukuro is Shinjuku's less-celebrated rival, and underrated for it. It has Tokyo's largest single entertainment complex in Round 1, an impressive concentration of ramen shops, and an otaku culture district less crowded than Akihabara. The neon west exit is pure sensory overload — an evening well spent.",
     spots: [
-      { name: "Round 1 Stadium Ikebukuro", desc: "Tokyo's largest Round 1: 10 bowling lanes, batting cages, a full darts arena, arcade, and karaoke. 5 floors.", hours: "10am–5am daily", price: "¥¥", cat: "Activity" },
-      { name: "Sunshine City", desc: "Massive entertainment mall with an aquarium, observation deck, and a full restaurant floor.", hours: "10am–10pm", price: "Varies", cat: "Culture" },
-      { name: "Ramen Ezogiku Ikebukuro", desc: "Sapporo-style miso ramen with butter and corn — one of the best miso bowls in the city.", hours: "11am–midnight", price: "¥", cat: "Ramen" },
-      { name: "Ikebukuro Nishi-Guchi Yokocho", desc: "Izakaya alley on the west side packed with grilled skewers, cold beer, and post-work salary workers.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya" },
-      { name: "Karaoke Pasela Ikebukuro", desc: "Upscale karaoke complex with food service, a cocktail list, and extravagant themed rooms until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity" }
+      { name: "Round 1 Stadium Ikebukuro", desc: "Tokyo's largest Round 1: 10 bowling lanes, batting cages, a full darts arena, arcade, and karaoke. 5 floors.", hours: "10am–5am daily", price: "¥¥", cat: "Activity",
+        lat: 35.7306, lng: 139.7103, address: "1-17-1 Higashiikebukuro, Toshima-ku, Tokyo" },
+      { name: "Sunshine City", desc: "Massive entertainment mall with an aquarium, observation deck, and a full restaurant floor.", hours: "10am–10pm", price: "Varies", cat: "Culture",
+        lat: 35.7300, lng: 139.7195, address: "3-1-1 Higashiikebukuro, Toshima-ku, Tokyo" },
+      { name: "Ramen Ezogiku Ikebukuro", desc: "Sapporo-style miso ramen with butter and corn — one of the best miso bowls in the city.", hours: "11am–midnight", price: "¥", cat: "Ramen",
+        lat: 35.7294, lng: 139.7106, address: "1-27-4 Nishiikebukuro, Toshima-ku, Tokyo" },
+      { name: "Ikebukuro Nishi-Guchi Yokocho", desc: "Izakaya alley on the west side packed with grilled skewers, cold beer, and post-work salary workers.", hours: "5pm–midnight", price: "¥¥", cat: "Izakaya",
+        lat: 35.7300, lng: 139.7094, address: "1-26 Nishiikebukuro, Toshima-ku, Tokyo" },
+      { name: "Karaoke Pasela Ikebukuro", desc: "Upscale karaoke complex with food service, a cocktail list, and extravagant themed rooms until 5am.", hours: "11am–5am", price: "¥¥", cat: "Activity",
+        lat: 35.7308, lng: 139.7118, address: "2-45-5 Ikebukuro, Toshima-ku, Tokyo" }
     ]
   }
 
@@ -1121,6 +1313,8 @@ let drawerOpen   = false;
 let dragStartY   = 0;
 let dragStartScrollTop = 0;
 let isDragging   = false;
+let spotPin      = null; // active spot pin marker
+let spotHood     = null; // neighborhood to return to on back
 
 /* ════════════════════════════════════════════════════════════
    MAP INIT
@@ -1225,8 +1419,8 @@ function detailHTML(h) {
       : `<span class="nd-walk">🚶 ${walkLabel(h)}</span>
          <span class="nd-train-badge">🚃 Take the train</span>`;
 
-  const spots = h.spots.map(s => `
-    <div class="spot">
+  const spots = h.spots.map((s, i) => `
+    <div class="spot" data-hood-id="${h.id}" data-spot-idx="${i}">
       <div class="spot-top">
         <div class="spot-name">${s.name}</div>
         <div class="spot-tag ${tagClass(s.cat)}">${s.cat}</div>
@@ -1236,9 +1430,13 @@ function detailHTML(h) {
         <span>🕐 ${s.hours}</span>
         <span>💴 ${s.price}</span>
       </div>
+      <div class="spot-address">📍 ${s.address}</div>
     </div>`).join("");
 
   return `
+    <div class="spot-back-wrap" style="display:none">
+      <button class="spot-back-btn">← Back to ${h.name}</button>
+    </div>
     <div class="nd-header">
       <div class="nd-dot" style="background:${h.color}"></div>
       <div>
@@ -1249,6 +1447,65 @@ function detailHTML(h) {
     <div class="nd-vibe">${h.vibe}</div>
     <div class="nd-spots-label">Top Spots &amp; Recommendations</div>
     ${spots}`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SPOT PIN — zoom in, drop marker, show popup; back zooms out
+════════════════════════════════════════════════════════════ */
+const spotIcon = L.divIcon({
+  html: '<div class="spot-pin-dot"></div>',
+  className: "",
+  iconSize:   [22, 22],
+  iconAnchor: [11, 11],
+  popupAnchor:[0, -16],
+});
+
+function clearSpotPin() {
+  if (!spotPin) return;
+  const pin = spotPin;
+  spotPin = null;
+  pin.off("popupclose");
+  map.removeLayer(pin);
+
+  document.querySelectorAll(".spot-back-wrap").forEach(el => el.style.display = "none");
+  document.querySelectorAll(".spot.spot-selected").forEach(el => el.classList.remove("spot-selected"));
+
+  if (spotHood) {
+    const h = spotHood;
+    spotHood = null;
+    map.flyTo([h.lat, h.lng], 14, { animate: true, duration: 0.55 });
+  }
+}
+
+function selectSpot(spot, hood) {
+  clearSpotPin();
+  spotHood = hood;
+
+  // Highlight the card in both drawer and sidebar
+  document.querySelectorAll(`.spot[data-hood-id="${hood.id}"][data-spot-idx]`).forEach(el => {
+    el.classList.remove("spot-selected");
+  });
+  document.querySelectorAll(
+    `.spot[data-hood-id="${hood.id}"][data-spot-idx="${hood.spots.indexOf(spot)}"]`
+  ).forEach(el => el.classList.add("spot-selected"));
+
+  // Show back buttons
+  document.querySelectorAll(".spot-back-wrap").forEach(el => el.style.display = "block");
+
+  // Zoom map to spot location
+  map.flyTo([spot.lat, spot.lng], 17, { animate: true, duration: 0.65 });
+
+  // Drop the pin and open popup
+  spotPin = L.marker([spot.lat, spot.lng], { icon: spotIcon, zIndexOffset: 5000 })
+    .addTo(map)
+    .bindPopup(
+      `<div class="spot-popup-name">${spot.name}</div>
+       <div class="spot-popup-addr">${spot.address}</div>`,
+      { className: "spot-pin-popup", maxWidth: 260 }
+    )
+    .openPopup();
+
+  spotPin.on("popupclose", clearSpotPin);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1424,6 +1681,7 @@ async function loadGeoJSON() {
    SELECT NEIGHBORHOOD
 ════════════════════════════════════════════════════════════ */
 function selectHood(h) {
+  clearSpotPin();
   selectedId = h.id;
   updateStyles();
 
@@ -1449,6 +1707,7 @@ function selectHood(h) {
 }
 
 function deselect() {
+  clearSpotPin();
   selectedId = null;
   updateStyles();
   closeDrawer();
@@ -1561,6 +1820,26 @@ legendBtn.addEventListener("click", e => {
 document.addEventListener("click", e => {
   if (!legendEl.contains(e.target) && e.target !== legendBtn)
     legendEl.classList.remove("on");
+});
+
+/* ════════════════════════════════════════════════════════════
+   SPOT CARD CLICKS  (event delegation on document)
+════════════════════════════════════════════════════════════ */
+document.addEventListener("click", e => {
+  // Back button
+  if (e.target.closest(".spot-back-btn")) {
+    clearSpotPin();
+    return;
+  }
+
+  // Spot card
+  const card = e.target.closest(".spot[data-hood-id]");
+  if (card) {
+    const hoodId  = card.dataset.hoodId;
+    const spotIdx = parseInt(card.dataset.spotIdx, 10);
+    const h = hoodById(hoodId);
+    if (h && h.spots[spotIdx]) selectSpot(h.spots[spotIdx], h);
+  }
 });
 
 /* ════════════════════════════════════════════════════════════
