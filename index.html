@@ -2025,6 +2025,7 @@ function placeUserDot(lat, lng) {
     zIndexOffset: 9000,
     interactive:  false,
   }).addTo(map);
+  map.panTo([lat, lng], { animate: true, duration: 0.5 });
 }
 
 function clearUserLoc() {
