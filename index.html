@@ -221,6 +221,11 @@
       animation: home-pulse 2.5s ease infinite;
     }
 
+    .mk-pill.landmark {
+      font-size: 14px;
+      cursor: default;
+    }
+
     @keyframes home-pulse {
       0%,100% { box-shadow: 0 3px 10px rgba(0,0,0,0.22), 0 0 0 0 rgba(255,107,107,0.5); }
       50%      { box-shadow: 0 3px 10px rgba(0,0,0,0.22), 0 0 0 9px rgba(255,107,107,0); }
@@ -2161,6 +2166,53 @@ new LocateControl().addTo(map);
 document.getElementById("geo-debug-close").addEventListener("click", () => {
   const panel = document.getElementById("geo-debug");
   if (panel) panel.style.display = "none";
+});
+
+/* ════════════════════════════════════════════════════════════
+   LANDMARK MARKERS  (always visible, filter-independent)
+════════════════════════════════════════════════════════════ */
+function createLandmark({ lat, lng, label, color, pulse, zIndex, tooltip }) {
+  const pulseClass = pulse ? " home-pulse" : "";
+  const html = `<div class="mk-wrap">
+    <div class="mk-pill home landmark${pulseClass}" style="background:${color};">${label}</div>
+    <div class="mk-tail" style="border-top:8px solid ${color};"></div>
+  </div>`;
+
+  const marker = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html,
+      className:  "",
+      iconSize:   [200, 56],
+      iconAnchor: [100, 56],
+    }),
+    interactive: true,
+    zIndexOffset: zIndex,
+  });
+
+  marker.bindTooltip(tooltip, {
+    className: "mk-tip", direction: "top", offset: [0, -10], sticky: false,
+  });
+
+  marker.addTo(map);
+  return marker;
+}
+
+createLandmark({
+  lat: 35.6245, lng: 139.7285,
+  label: "🏠 Home",
+  color: "#FF4444",
+  pulse: true,
+  zIndex: 10000,
+  tooltip: "Your hotel — 5 Chome Higashigotanda, Shinagawa",
+});
+
+createLandmark({
+  lat: 35.7056, lng: 139.7519,
+  label: "⚾ Tokyo Dome",
+  color: "#1A6FBF",
+  pulse: false,
+  zIndex: 9500,
+  tooltip: "Tokyo Dome — Bunkyo, Tokyo",
 });
 
 /* ════════════════════════════════════════════════════════════
