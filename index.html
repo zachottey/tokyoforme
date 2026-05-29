@@ -436,16 +436,46 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
-    /* ── Spot address ───────────────────────────────────────────── */
+    /* ── Spot footer (address + maps button) ───────────────────── */
+    .spot-footer {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
     .spot-address {
       font-size: 11px;
       color: #b8b8b2;
-      margin-top: 6px;
       display: flex;
       align-items: flex-start;
       gap: 3px;
       line-height: 1.4;
+      flex: 1;
+      min-width: 0;
     }
+
+    .spot-maps-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1a73e8;
+      background: #e8f0fe;
+      border: 1px solid #c5d8fb;
+      border-radius: 6px;
+      padding: 3px 8px;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1.4;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s;
+    }
+    .spot-maps-btn:hover  { background: #d2e3fc; }
+    .spot-maps-btn:active { background: #c0d5fc; }
 
     /* ── Back to neighborhood button ────────────────────────────── */
     .spot-back-wrap { margin-bottom: 16px; }
@@ -1586,7 +1616,13 @@ function detailHTML(h) {
         <span>🕐 ${s.hours}</span>
         <span>💴 ${s.price}</span>
       </div>
-      <div class="spot-address">📍 ${s.address}</div>
+      <div class="spot-footer">
+        <div class="spot-address">📍 ${s.address}</div>
+        <a class="spot-maps-btn"
+           href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name + ' ' + h.name + ' Tokyo')}"
+           target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">🗺 Maps</a>
+      </div>
     </div>`).join("");
 
   return `
