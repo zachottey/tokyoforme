@@ -885,7 +885,7 @@
     <div class="topbar-logo">🗾</div>
     <div class="topbar-text">
       <div class="topbar-title">Tokyo Explorer</div>
-      <div class="topbar-sub">Meguro Base Camp · 3–4 Day Guide</div>
+      <div class="topbar-sub">Higashigotanda Base · 3–4 Day Guide</div>
     </div>
     <button id="legend-btn" aria-label="Map legend">🗺</button>
   </header>
@@ -977,7 +977,7 @@ const HOODS = [
   {
     id: "meguro", name: "Meguro",
     lat: 35.6334, lng: 139.7157,
-    color: "#FF4444", walkMin: 0,
+    color: "#FF4444", walkMin: 20,
     isHome: true, inRange: true,
     cats: ["food", "activity", "nightlife", "culture"],
     vibeShort: "Your home base — residential calm meets a buzzing food scene",
@@ -997,8 +997,8 @@ const HOODS = [
   /* ── 2. NAKAMEGURO ──────────────────────────────────────────── */
   {
     id: "nakameguro", name: "Nakameguro",
-    lat: 35.6441, lng: 139.6984,
-    color: "#00C4B4", walkMin: 15,
+    lat: 35.6480, lng: 139.6970,
+    color: "#00C4B4", walkMin: 50,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "music", "culture"],
     vibeShort: "Canal-side cool — boutiques, third-wave coffee, late-night bars",
@@ -1018,8 +1018,8 @@ const HOODS = [
   /* ── 3. DAIKANYAMA ──────────────────────────────────────────── */
   {
     id: "daikanyama", name: "Daikanyama",
-    lat: 35.6494, lng: 139.7033,
-    color: "#D4880A", walkMin: 20,
+    lat: 35.6494, lng: 139.7000,
+    color: "#D4880A", walkMin: 45,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "culture", "activity"],
     vibeShort: "Tokyo's Left Bank — design, wine, and the world's best bookstore",
@@ -1040,7 +1040,7 @@ const HOODS = [
   {
     id: "ebisu", name: "Ebisu",
     lat: 35.6467, lng: 139.7099,
-    color: "#2471A3", walkMin: 18,
+    color: "#2471A3", walkMin: 35,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "culture"],
     vibeShort: "Polished and grown-up — beer history, great dining, hidden alleys",
@@ -1063,7 +1063,7 @@ const HOODS = [
   {
     id: "shibuya", name: "Shibuya",
     lat: 35.6580, lng: 139.7016,
-    color: "#E87722", walkMin: 28,
+    color: "#E87722", walkMin: 55,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "music", "activity", "culture"],
     vibeShort: "Electric, chaotic, unmissable — the beating heart of Tokyo",
@@ -1086,7 +1086,7 @@ const HOODS = [
   {
     id: "harajuku", name: "Harajuku",
     lat: 35.6702, lng: 139.7027,
-    color: "#C0398C", walkMin: 38,
+    color: "#C0398C", walkMin: 70,
     isHome: false, inRange: true,
     cats: ["food", "culture", "nightlife", "activity"],
     vibeShort: "Fashion extremes and sacred forests — crepes, couture, and Meiji Shrine",
@@ -1109,7 +1109,7 @@ const HOODS = [
   {
     id: "shimokitazawa", name: "Shimokitazawa",
     lat: 35.6613, lng: 139.6677,
-    color: "#7B1FA2", walkMin: 52,
+    color: "#7B1FA2", walkMin: 85,
     isHome: false, inRange: true,
     cats: ["nightlife", "music", "food"],
     vibeShort: "Tokyo's indie music heartland — live houses, vintage, izakayas",
@@ -1132,7 +1132,7 @@ const HOODS = [
   {
     id: "sangenjaya", name: "Sangenjaya",
     lat: 35.6440, lng: 139.6696,
-    color: "#F06292", walkMin: 45,
+    color: "#F06292", walkMin: 70,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "activity"],
     vibeShort: "Young, local, unpretentious — Tokyo's best izakaya crawl neighborhood",
@@ -1151,7 +1151,7 @@ const HOODS = [
   {
     id: "jiyugaoka", name: "Jiyugaoka",
     lat: 35.6078, lng: 139.6919,
-    color: "#00A86B", walkMin: 42,
+    color: "#00A86B", walkMin: 45,
     isHome: false, inRange: true,
     cats: ["food", "culture", "nightlife", "activity"],
     vibeShort: "Tokyo's Little Paris — sweets, European vibes, and great sushi",
@@ -1172,16 +1172,16 @@ const HOODS = [
   {
     id: "gotanda", name: "Gotanda",
     lat: 35.6262, lng: 139.7233,
-    color: "#FF8C00", walkMin: 22,
+    color: "#FF8C00", walkMin: 5,
     isHome: false, inRange: true,
     cats: ["food", "activity", "nightlife"],
     vibeShort: "Underrated local hub — bowling, award ramen, and zero pretension",
     vibe: "Gotanda doesn't make the travel guides, and locals love it for exactly that reason. A working neighborhood with a down-to-earth izakaya scene, excellent ramen, and actual bowling lanes — no queues, no hype, honest prices. A 20-minute walk from Meguro and a welcome escape from curated cool.",
     spots: [
-      { name: "Tonkotsu Ramen Hakata Tenjin Gotanda", desc: "Local no-frills tonkotsu counter near Gotanda station — always busy, always reliable.", hours: "11am–2am", price: "¥", cat: "Ramen",
-        lat: 35.6262, lng: 139.7233, address: "1-7-11 Nishigotanda, Shinagawa-ku, Tokyo" },
-      { name: "Gotanda Bowl", desc: "6-lane bowling alley near Gotanda station — old-school, affordable, no queues.", hours: "10am–midnight", price: "¥¥", cat: "Activity",
-        lat: 35.6265, lng: 139.7228, address: "2-1-8 Higashigotanda, Shinagawa-ku, Tokyo" },
+      { name: "Ippudo Gotanda Higashiguchi", desc: "World-famous Hakata tonkotsu chain — the Gotanda east-exit branch is less than 1 min walk from the station. Reliable, walk-in friendly, open late.", hours: "11am–10:30pm daily", price: "¥¥", cat: "Ramen",
+        lat: 35.6262, lng: 139.7233, address: "2F Kitahara Bldg, 1-14-14 Higashigotanda, Shinagawa-ku, Tokyo 141-0022" },
+      { name: "Round 1 Osaki (10 min from hotel)", desc: "The nearest Round 1 to your hotel — bowling, batting cages, darts, and arcade all under one roof. Short walk or one train stop from Gotanda.", hours: "10am–5am daily", price: "¥¥", cat: "Activity",
+        lat: 35.6197, lng: 139.7283, address: "2-1-6 Osaki, Shinagawa-ku, Tokyo" },
       { name: "Craft Beer Bar Oshi Gotanda", desc: "Local craft beer spot with 12 rotating taps and a friendly crowd.", hours: "5pm–1am", price: "¥¥", cat: "Bar",
         lat: 35.6260, lng: 139.7230, address: "3-2-5 Nishigotanda, Shinagawa-ku, Tokyo" },
     ]
@@ -1191,7 +1191,7 @@ const HOODS = [
   {
     id: "shinjuku", name: "Shinjuku",
     lat: 35.6938, lng: 139.7034,
-    color: "#B91C1C", walkMin: 58,
+    color: "#B91C1C", walkMin: 100,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "music", "activity", "culture"],
     vibeShort: "Tokyo's entertainment capital — Golden Gai, Memory Lane, no bedtime",
@@ -1216,7 +1216,7 @@ const HOODS = [
   {
     id: "roppongi", name: "Roppongi",
     lat: 35.6628, lng: 139.7314,
-    color: "#4527A0", walkMin: 42,
+    color: "#4527A0", walkMin: 55,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "music", "culture"],
     vibeShort: "International and electric — world-class art, clubs, and late nights",
@@ -1237,7 +1237,7 @@ const HOODS = [
   {
     id: "azabu_juban", name: "Azabu-Juban",
     lat: 35.6550, lng: 139.7365,
-    color: "#0288D1", walkMin: 38,
+    color: "#0288D1", walkMin: 45,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "culture", "activity"],
     vibeShort: "Upscale village — world-class sushi, great izakayas, embassy crowd",
@@ -1256,7 +1256,7 @@ const HOODS = [
   {
     id: "hiroo", name: "Hiroo",
     lat: 35.6499, lng: 139.7218,
-    color: "#546E7A", walkMin: 28,
+    color: "#546E7A", walkMin: 35,
     isHome: false, inRange: true,
     cats: ["food", "nightlife", "culture", "activity"],
     vibeShort: "Expat village meets Japanese tradition — great dining, zero attitude",
@@ -1277,7 +1277,7 @@ const HOODS = [
   {
     id: "setagaya", name: "Setagaya",
     lat: 35.6485, lng: 139.6533,
-    color: "#00695C", walkMin: 55,
+    color: "#00695C", walkMin: 90,
     isHome: false, inRange: true,
     cats: ["culture", "activity", "food", "nightlife"],
     vibeShort: "Quiet and local — lucky cat temple, batting cages, real Tokyo life",
@@ -1298,7 +1298,7 @@ const HOODS = [
   {
     id: "koenji", name: "Koenji",
     lat: 35.7053, lng: 139.6493,
-    color: "#FFC300", walkMin: 72,
+    color: "#FFC300", walkMin: 145,
     isHome: false, inRange: true,
     cats: ["nightlife", "music", "culture", "food", "activity"],
     vibeShort: "Bohemian Tokyo — vintage records, punk clubs, zero pretense",
@@ -1321,7 +1321,7 @@ const HOODS = [
   {
     id: "ginza", name: "Ginza / Shimbashi",
     lat: 35.6717, lng: 139.7634,
-    color: "#B8860B", walkMin: 68,
+    color: "#B8860B", walkMin: 75,
     isHome: false, inRange: true,
     cats: ["food", "culture", "nightlife"],
     vibeShort: "Old money meets salary men — Champs-Élysées by day, izakaya alleys by night",
@@ -1344,7 +1344,7 @@ const HOODS = [
   {
     id: "akihabara", name: "Akihabara",
     lat: 35.6988, lng: 139.7731,
-    color: "#AD1457", walkMin: 85,
+    color: "#AD1457", walkMin: 115,
     isHome: false, inRange: true,
     cats: ["activity", "culture", "food"],
     vibeShort: "Electric Town — anime, arcades, and absolute sensory overload",
@@ -1367,7 +1367,7 @@ const HOODS = [
   {
     id: "kichijoji", name: "Kichijoji",
     lat: 35.7020, lng: 139.5801,
-    color: "#2E7D32", walkMin: 95,
+    color: "#2E7D32", walkMin: 200,
     isHome: false, inRange: false,
     cats: ["food", "activity", "music", "culture", "nightlife"],
     vibeShort: "Tokyo's most loveable neighborhood — park, jazz bars, hidden alleys",
@@ -1390,7 +1390,7 @@ const HOODS = [
   {
     id: "ikebukuro", name: "Ikebukuro",
     lat: 35.7296, lng: 139.7109,
-    color: "#1565C0", walkMin: 105,
+    color: "#1565C0", walkMin: 145,
     isHome: false, inRange: false,
     cats: ["activity", "food", "nightlife", "culture"],
     vibeShort: "West side power play — Tokyo's biggest entertainment complex and great ramen",
